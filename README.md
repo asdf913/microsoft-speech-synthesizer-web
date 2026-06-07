@@ -1,29 +1,17 @@
-# Microsoft Speech Platform Web
+# Microsoft Speech Synthesizer Web
 
 ## Build
 `mvn clean package`
 
 ## Run
-`java -jar microsoft-speech-platform-web-0.0.1-SNAPSHOT.jar`
+`java -jar microsoft-speech-synthesizer-web-0.0.1-SNAPSHOT.jar`
 
 ## Runtime Required
 <table>
   <tbody>
     <tr>
-      <td>Microsoft Speech Platform - Runtime (Version 11)</td>
-      <td>https://www.microsoft.com/en-us/download/details.aspx?id=27225</td>
-    </tr>
-    <tr>
-      <td>Microsoft Speech Platform - Runtime Languages (Version 11)</td>
-      <td>https://www.microsoft.com/en-us/download/details.aspx?id=27224</td>
-    </tr>
-    <tr>
-      <td>Download .NET Framework 4.5.1</td>
-      <td>https://dotnet.microsoft.com/en-us/download/dotnet-framework/net451</td>
-    </tr>
-    <tr>
-      <td>Java SE 8 Archive Downloads (JDK 8u202 and earlier)</td>
-      <td>https://www.oracle.com/jp/java/technologies/javase/javase8-archive-downloads.html</td>
+      <td>Java SE 25</td>
+      <td>https://www.oracle.com/java/technologies/downloads/#java25</td>
     </tr>
   </tbody>
 </table>
@@ -33,12 +21,12 @@
 <table>
   <tbody>
     <tr>
-      <td>Eclipse&nbsp;Oxygen</td>
-      <td>https://www.eclipse.org/downloads/packages/release/oxygen/r</td>
+      <td>Eclipse&nbsp;2026-03</td>
+      <td>https://www.eclipse.org/downloads/packages/release/2026-03/r</td>
     </tr>
     <tr>
       <td>TestNG&nbsp;for&nbsp;Eclipse </td>
-      <td>https://testng.org/testng-eclipse-update-site/zipped/6.14.3.201902250526/org.testng.eclipse.updatesite.zip</td>
+      <td>https://testng.org/testng-eclipse-update-site</td>
     </tr>
   </tbody>
 </table>
@@ -61,41 +49,37 @@
   </thead>
   <tbody>
     <tr>
-      <td>IsInstalled</td>
-      <td>http://127.0.0.1:8080/isInstalled</td>
-      <td>true</td>
-    </tr>
-    <tr>
-      <td>Provider&nbsp;Name</td>
-      <td>http://127.0.0.1:8080/getProviderName</td>
-      <td>Microsoft Speech Object Library</td>
-    </tr>
-    <tr>
-      <td>Provider&nbsp;Version</td>
-      <td>http://127.0.0.1:8080/getProviderVersion</td>
-      <td>11.0.14405.00</td>
-    </tr>
-    <tr>
       <td>Provider&nbsp;Platform</td>
       <td>http://127.0.0.1:8080/getProviderPlatform</td>
-      <td>win64</td>
+      <td>Error</td>
     </tr>
     <tr>
       <td>Voice&nbsp;IDs</td>
       <td>http://127.0.0.1:8080/getVoiceIds</td>
-      <td></td>
+      <td><pre>[
+  "TTS_MS_JA-JP_HARUKA_11.0",
+  "TTS_MS_EN-US_ZIRA_11.0",
+  "TTS_MS_FR-FR_HORTENSE_11.0",
+  "TTS_MS_EN-US_DAVID_11.0",
+  "TTS_MS_ZH-HK_TRACY_11.0"
+]</pre></td>
+    </tr>
+    <tr>
+      <td>Voice&nbsp;Attribute</td>
+      <td>http://127.0.0.1:8080/getVoiceAttribute?id=TTS_MS_JA-JP_HARUKA_11.0&attribute=Gender</td>
+      <td><pre>["Female"]</pre></td>
     </tr>
     <tr>
       <td>Voice&nbsp;Attributes&nbsp;by&nbsp;ID</td>
-      <td>http://127.0.0.1:8080/HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech%20Server\v11.0\Voices\Tokens\TTS_MS_ja-JP_Haruka_11.0</td>
+      <td>http://127.0.0.1:8080/getVoiceAttributes?id=TTS_MS_JA-JP_HARUKA_11.0</td>
       <td>
         <pre>{
-  "": "",
   "Age": "Adult",
-  "AudioFormats": "18",
   "Gender": "Female",
   "Language": "411",
-  "Name": "Microsoft Server Speech Text to Speech Voice (ja-JP, Haruka)",
+  "Name": "Microsoft Haruka Desktop",
+  "SharedPronunciation": "",
+  "SpLexicon": "{0655E396-25D0-11D3-9C26-00C04F8EF87C}",
   "Vendor": "Microsoft",
   "Version": "11.0"
 }</pre>
