@@ -181,11 +181,8 @@ class MainServletTest {
 				//
 			} else if (Objects.equals(method != null ? method.getDeclaringClass() : null, CLASS_JNA)) {
 				//
-				if (Objects.equals(getReturnType(method), String.class)) {
-					//
-					return null;
-					//
-				} else if (Objects.equals(name, "getVoiceIds")) {
+				if (Boolean.logicalOr(Objects.equals(getReturnType(method), String.class),
+						Objects.equals(name, "getVoiceIds"))) {
 					//
 					return null;
 					//
