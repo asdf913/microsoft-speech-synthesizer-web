@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiPredicate;
@@ -22,7 +23,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.collections4.IterableUtils;
@@ -52,7 +52,8 @@ class MainServletTest {
 
 	private static Method METHOD_TEST, METHOD_TO_INT_ARRAY, METHOD_COLLECT, METHOD_TEST_AND_ACCEPT, METHOD_CAST,
 			METHOD_TEST_AND_GET, METHOD_TEST_AND_TEST, METHOD_STARTS_WITH, METHOD_ENDS_WITH, METHOD_AND,
-			METHOD_GET_IVALUE0, METHOD_GET_NAME, METHOD_GET_CLASS, METHOD_IS_ASSIGNABLE_FROM = null;
+			METHOD_GET_IVALUE0, METHOD_GET_NAME, METHOD_GET_CLASS, METHOD_IS_ASSIGNABLE_FROM, METHOD_TO_LIST,
+			METHOD_FILTER = null;
 
 	@BeforeSuite
 	void beforeSuite() throws NoSuchMethodException, ClassNotFoundException {
@@ -92,6 +93,10 @@ class MainServletTest {
 		//
 		(METHOD_IS_ASSIGNABLE_FROM = clz.getDeclaredMethod("isAssignableFrom", Class.class, Class.class))
 				.setAccessible(true);
+		//
+		(METHOD_TO_LIST = clz.getDeclaredMethod("toList", Stream.class)).setAccessible(true);
+		//
+		(METHOD_FILTER = clz.getDeclaredMethod("filter", Stream.class, Predicate.class)).setAccessible(true);
 		//
 		CLASS_INT_MAP = Class.forName("jakarta.servlet.http.MainServlet$IntMap");
 		//
@@ -545,8 +550,9 @@ class MainServletTest {
 			//
 		} // if
 			//
-		final Iterable<Method> ms = Arrays.stream(CLASS_JNA != null ? CLASS_JNA.getDeclaredMethods() : null)
-				.filter(m -> m != null && m.getParameterCount() == 0).collect(Collectors.toList());
+		final Iterable<Method> ms = toList(
+				filter(Arrays.stream(CLASS_JNA != null ? CLASS_JNA.getDeclaredMethods() : null),
+						m -> m != null && m.getParameterCount() == 0));
 		//
 		if ((ih = ObjectUtils.getIfNull(ih, IH::new)) != null && !IterableUtils.isEmpty(ms)) {
 			//
@@ -636,6 +642,35 @@ class MainServletTest {
 			//
 		instance.doGet(httpServletRequest, null);
 		//
+	}
+
+	private static <T> Stream<T> filter(final Stream<T> instance, final Predicate<? super T> predicate)
+			throws Throwable {
+		try {
+			final Object obj = invoke(METHOD_FILTER, null, instance, predicate);
+			if (obj == null) {
+				return null;
+			} else if (obj instanceof Stream) {
+				return (Stream) obj;
+			}
+			throw new Throwable(getName(getClass(obj)));
+		} catch (final InvocationTargetException e) {
+			throw e.getTargetException();
+		}
+	}
+
+	private static <T> List<T> toList(final Stream<T> instance) throws Throwable {
+		try {
+			final Object obj = invoke(METHOD_TO_LIST, null, instance);
+			if (obj == null) {
+				return null;
+			} else if (obj instanceof List) {
+				return (List) obj;
+			}
+			throw new Throwable(getName(getClass(obj)));
+		} catch (final InvocationTargetException e) {
+			throw e.getTargetException();
+		}
 	}
 
 	@Test
