@@ -19,7 +19,7 @@
     </tr>
     <tr>
       <td>Java SE 17</td>
-      <td>https://www.oracle.com/java/technologies/downloads/#java17</td>
+      <td><a href="https://www.oracle.com/java/technologies/downloads/#java17">Java Downloads | Oracle</a></td>
     </tr>
   </tbody>
 </table>
