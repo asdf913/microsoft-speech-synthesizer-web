@@ -38,7 +38,9 @@
     </tr>
   </tbody>
 </table>
+
 ## URL
+
 <table>
   <tbody>
     <tr>
@@ -95,3 +97,6 @@
     </tr>
   </tbody>
 </table>
+
+# Language
+<a href="https://support.microsoft.com/en-us/windows/language-packs-for-windows-a5094319-a92d-18de-5b53-1cfc697cfca8#windowsversion=windows_10">Language packs for Windows - Microsoft Support (Microsoft Windows 10)</a>
