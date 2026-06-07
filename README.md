@@ -10,8 +10,8 @@
 <table>
   <tbody>
     <tr>
-      <td>Java SE 25</td>
-      <td>https://www.oracle.com/java/technologies/downloads/#java25</td>
+      <td>Java SE 21</td>
+      <td>https://www.oracle.com/java/technologies/downloads/#java21</td>
     </tr>
   </tbody>
 </table>
