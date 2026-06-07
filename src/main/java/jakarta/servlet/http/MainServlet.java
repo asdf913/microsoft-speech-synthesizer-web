@@ -296,7 +296,8 @@ public class MainServlet extends HttpServlet {
 			//
 		return cast(Boolean.class,
 				Objects.equals(getName(getClass(FileSystems.getDefault())), "sun.nio.fs.WindowsFileSystem")
-						? Narcissus.invokeStaticMethod(ms.size() == 1 ? ms.get(0) : null)
+						? Narcissus.invokeStaticMethod(
+								testAndApply(x -> IterableUtils.size(x) == 1, ms, x -> IterableUtils.get(x, 0), null))
 						: null);
 		//
 	}
