@@ -10,6 +10,10 @@
 <table>
   <tbody>
     <tr>
+      <td>Microsoft Windows 10 or later</td>
+      <td>https://web.archive.org/web/20150729124701/http://www.microsoft.com/en-us/windows</td>
+    </tr>
+    <tr>
       <td>Java SE 17</td>
       <td>https://www.oracle.com/java/technologies/downloads/#java17</td>
     </tr>
