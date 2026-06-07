@@ -1,0 +1,1181 @@
+package jakarta.servlet.http;
+
+import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.nio.file.FileSystems;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.BiPredicate;
+import java.util.function.BooleanSupplier;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.apache.commons.collections4.IterableUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.function.FailableConsumer;
+import org.javatuples.Unit;
+import org.testng.Assert;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeSuite;
+import org.testng.annotations.Test;
+
+import com.google.common.base.Predicates;
+import com.google.common.base.Suppliers;
+import com.google.common.reflect.Reflection;
+
+import io.github.toolfactory.narcissus.Narcissus;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import javassist.util.proxy.MethodHandler;
+import javassist.util.proxy.ProxyFactory;
+import javassist.util.proxy.ProxyObject;
+
+class MainServletTest {
+
+	private static Class<?> CLASS_JNA = null, CLASS_INT_MAP = null;
+
+	private static Method METHOD_TEST, METHOD_TO_INT_ARRAY, METHOD_COLLECT, METHOD_TEST_AND_ACCEPT, METHOD_CAST,
+			METHOD_TEST_AND_GET, METHOD_TEST_AND_TEST, METHOD_STARTS_WITH, METHOD_ENDS_WITH, METHOD_AND,
+			METHOD_GET_IVALUE0, METHOD_GET_NAME, METHOD_GET_CLASS, METHOD_IS_ASSIGNABLE_FROM = null;
+
+	@BeforeSuite
+	void beforeSuite() throws NoSuchMethodException, ClassNotFoundException {
+		//
+		final Class<?> clz = MainServlet.class;
+		//
+		(METHOD_TEST = clz.getDeclaredMethod("test", Predicate.class, Object.class)).setAccessible(true);
+		//
+		(METHOD_TO_INT_ARRAY = clz.getDeclaredMethod("toIntArray", String.class)).setAccessible(true);
+		//
+		(METHOD_COLLECT = clz.getDeclaredMethod("collect", Stream.class, Collector.class)).setAccessible(true);
+		//
+		(METHOD_COLLECT = clz.getDeclaredMethod("collect", Stream.class, Collector.class)).setAccessible(true);
+		//
+		(METHOD_TEST_AND_ACCEPT = clz.getDeclaredMethod("testAndAccept", Predicate.class, Object.class,
+				FailableConsumer.class)).setAccessible(true);
+		//
+		(METHOD_CAST = clz.getDeclaredMethod("cast", Class.class, Object.class)).setAccessible(true);
+		//
+		(METHOD_TEST_AND_GET = clz.getDeclaredMethod("testAndGet", Boolean.TYPE, Supplier.class)).setAccessible(true);
+		//
+		(METHOD_TEST_AND_TEST = clz.getDeclaredMethod("testAndTest", Boolean.TYPE, BiPredicate.class, Object.class,
+				Object.class)).setAccessible(true);
+		//
+		(METHOD_STARTS_WITH = clz.getDeclaredMethod("startsWith", String.class, String.class)).setAccessible(true);
+		//
+		(METHOD_ENDS_WITH = clz.getDeclaredMethod("endsWith", String.class, String.class)).setAccessible(true);
+		//
+		(METHOD_AND = clz.getDeclaredMethod("and", Boolean.TYPE, Boolean.TYPE, boolean[].class)).setAccessible(true);
+		//
+		(METHOD_GET_IVALUE0 = clz.getDeclaredMethod("getIValue0", String.class,
+				CLASS_JNA = Class.forName("jakarta.servlet.http.MainServlet$Jna"))).setAccessible(true);
+		//
+		(METHOD_GET_NAME = clz.getDeclaredMethod("getName", Class.class)).setAccessible(true);
+		//
+		(METHOD_GET_CLASS = clz.getDeclaredMethod("getClass", Object.class)).setAccessible(true);
+		//
+		(METHOD_IS_ASSIGNABLE_FROM = clz.getDeclaredMethod("isAssignableFrom", Class.class, Class.class))
+				.setAccessible(true);
+		//
+		CLASS_INT_MAP = Class.forName("jakarta.servlet.http.MainServlet$IntMap");
+		//
+	}
+
+	private static class IH implements InvocationHandler {
+
+		private Boolean test, containsKey, getAsBoolean, add;
+
+		private String servletPath;
+
+		private Map<Object, Object> parameters = null;
+
+		private Integer intValue, modifiers = null;
+
+		@Override
+		public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
+			//
+			if (Objects.equals(getReturnType(method), Void.TYPE)) {
+				//
+				return null;
+				//
+			} // if
+				//
+			final String name = MainServletTest.getName(method);
+			//
+			if (proxy instanceof ServletResponse) {
+				//
+				if (Objects.equals(name, "getOutputStream")) {
+					//
+					return null;
+					//
+				} // if
+					//
+			} else if (proxy instanceof ServletRequest && Objects.equals(name, "getParameter") && args != null
+					&& args.length > 0) {
+				//
+				return get(parameters = ObjectUtils.getIfNull(parameters, LinkedHashMap::new), ArrayUtils.get(args, 0));
+				//
+			} // if
+				//
+			if (proxy instanceof Member) {
+				//
+				if (Objects.equals(name, "getName")) {
+					//
+					return null;
+					//
+				} else if (Objects.equals(name, "getModifiers")) {
+					//
+					return modifiers;
+					//
+				} // if
+					//
+			} else if (proxy instanceof Function && Objects.equals(name, "apply")) {
+				//
+				return null;
+				//
+			} else if (Stream.of(Predicate.class, BiPredicate.class).anyMatch(x -> x != null && x.isInstance(proxy))
+					&& Objects.equals(name, "test")) {
+				//
+				return test;
+				//
+			} else if (proxy instanceof Collection) {
+				//
+				if (Objects.equals(name, "stream")) {
+					//
+
+					return null;
+					//
+				} else if (Objects.equals(name, "add")) {
+					//
+					return add;
+					//
+				} // if
+					//
+			} else if (proxy instanceof Stream) {
+				//
+				if (contains(Arrays.asList("collect", "filter", "toList"), name)) {
+					//
+					return null;
+					//
+				} // if
+					//
+			} else if (proxy instanceof HttpServletRequest && Objects.equals(name, "getServletPath")) {
+				//
+				return servletPath;
+				//
+			} else if (Objects.equals(method != null ? method.getDeclaringClass() : null, CLASS_JNA)) {
+				//
+				if (Objects.equals(getReturnType(method), String.class)) {
+					//
+					return null;
+					//
+				} else if (Objects.equals(name, "getVoiceIds")) {
+					//
+					return null;
+					//
+				} // if
+					//
+			} else if (Objects.equals(method != null ? method.getDeclaringClass() : null, CLASS_INT_MAP)) {
+				//
+				if (Objects.equals(name, "getInt")) {
+					//
+					return intValue;
+					//
+				} // if
+					//
+			} else if (proxy instanceof Map) {
+				//
+				if (contains(Arrays.asList("put", "get"), name)) {
+					//
+					return null;
+					//
+				} else if (Objects.equals(name, "containsKey")) {
+					//
+					return containsKey;
+					//
+				} // if
+					//
+			} else if (proxy instanceof BooleanSupplier && Objects.equals(name, "getAsBoolean")) {
+				//
+				return getAsBoolean;
+				//
+			} // if
+				//
+			throw new Throwable(name);
+			//
+		}
+
+		private static <V> V get(final Map<?, V> instance, final Object key) {
+			return instance != null ? instance.get(key) : null;
+		}
+
+	}
+
+	private static class MH implements MethodHandler {
+
+		@Override
+		public Object invoke(final Object self, final Method thisMethod, final Method proceed, final Object[] args)
+				throws Throwable {
+			//
+			if (Objects.equals(getReturnType(thisMethod), Void.TYPE)) {
+				//
+				return null;
+				//
+			} // if
+				//
+			throw new Throwable(getName(thisMethod));
+			//
+		}
+
+	}
+
+	private MainServlet instance = null;
+
+	private IH ih = null;
+
+	@BeforeMethod
+	void beforeMethod() throws IllegalAccessException, InvocationTargetException {
+		//
+		instance = cast(MainServlet.class, Narcissus.allocateInstance(MainServlet.class));
+		//
+		ih = new IH();
+		//
+	}
+
+	@Test
+	void testCast() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertNull(cast(Object.class, null));
+		//
+	}
+
+	private static <T> T cast(final Class<T> clz, final Object value)
+			throws IllegalAccessException, InvocationTargetException {
+		return (T) invoke(METHOD_CAST, null, clz, value);
+	}
+
+	private static Object invoke(final Method method, final Object instance, final Object... args)
+			throws IllegalAccessException, InvocationTargetException {
+		return method != null ? method.invoke(instance, args) : null;
+	}
+
+	@Test
+	void testNull() throws Throwable {
+		//
+		final Method[] ms = MainServlet.class.getDeclaredMethods();
+		//
+		Method m = null;
+		//
+		Object result = null;
+		//
+		String toString = null;
+		//
+		Collection<Object> collection = null;
+		//
+		Object[] os = null;
+		//
+		Class<?>[] parameterTypes = null;
+		//
+		Class<?> parameterType = null;
+		//
+		for (int i = 0; ms != null && i < ms.length; i++) {
+			//
+			if ((m = ArrayUtils.get(ms, i)) == null || m.isSynthetic()
+					|| (parameterTypes = m.getParameterTypes()) == null
+					|| Boolean.logicalAnd(Objects.equals(getName(m), "and"), Arrays.equals(parameterTypes,
+							new Class<?>[] { Boolean.TYPE, Boolean.TYPE, boolean[].class }))) {
+				//
+				continue;
+				//
+			} // if
+				//
+			clear(collection = ObjectUtils.getIfNull(collection, ArrayList::new));
+			//
+			for (int j = 0; j < parameterTypes.length; j++) {
+				//
+				if (Objects.equals(parameterType = ArrayUtils.get(parameterTypes, j), Integer.TYPE)) {
+					//
+					add(collection, Integer.valueOf(0));
+					//
+				} else if (Objects.equals(parameterType, Long.TYPE)) {
+					//
+					add(collection, Long.valueOf(0));
+					//
+				} else if (Objects.equals(parameterType, Boolean.TYPE)) {
+					//
+					add(collection, Boolean.FALSE);
+					//
+				} else {
+					//
+					add(collection, null);
+					//
+				} // if
+					//
+			} // for
+				//
+			os = toArray(collection);
+			//
+			toString = Objects.toString(m);
+			//
+			if (Modifier.isStatic(m.getModifiers())) {
+				//
+				result = Narcissus.invokeStaticMethod(m, os);
+				//
+			} else {
+				//
+				result = Narcissus.invokeMethod(instance = ObjectUtils.getIfNull(instance, MainServlet::new), m, os);
+				//
+			} // if
+				//
+			if (contains(Arrays.asList(Integer.TYPE, Boolean.TYPE), getReturnType(m)) || Boolean.logicalAnd(
+					Objects.equals(getName(m), "IsWindows10OrGreater"),
+					Objects.equals(getName(getClass(FileSystems.getDefault())), "sun.nio.fs.WindowsFileSystem"))) {
+				//
+				Assert.assertNotNull(result, toString);
+				//
+			} else {
+				//
+				Assert.assertNull(result, toString);
+				//
+			} // if
+				//
+		} // for
+			//
+	}
+
+	private static Class<?> getReturnType(final Method instance) {
+		return instance != null ? instance.getReturnType() : null;
+	}
+
+	private static Object[] toArray(final Collection<?> instance) {
+		return instance != null ? instance.toArray() : null;
+	}
+
+	@Test
+	void testNotNull() throws Throwable {
+		//
+		final Method[] ms = MainServlet.class.getDeclaredMethods();
+		//
+		Method m = null;
+		//
+		Object result = null;
+		//
+		String toString, name = null;
+		//
+		Object[] os = null;
+		//
+		Class<?>[] parameterTypes = null;
+		//
+		Class<?> parameterType = null;
+		//
+		Collection<Object> collection = null;
+		//
+		if (ih != null) {
+			//
+			ih.test = ih.getAsBoolean = ih.add = Boolean.TRUE;
+			//
+			ih.modifiers = Integer.valueOf(0);
+			//
+		} // if
+			//
+		ProxyFactory proxyFactory = null;
+		//
+		Object object = null;
+		//
+		MH mh = null;
+		//
+		for (int i = 0; ms != null && i < ms.length; i++) {
+			//
+			if ((m = ArrayUtils.get(ms, i)) == null || m.isSynthetic()
+					|| (parameterTypes = m.getParameterTypes()) == null
+					|| Boolean.logicalAnd(Objects.equals(name = getName(m), "and"),
+							Arrays.equals(parameterTypes,
+									new Class<?>[] { Boolean.TYPE, Boolean.TYPE, boolean[].class }))
+					|| Boolean.logicalAnd(Objects.equals(name, "getIValue0"),
+							Arrays.equals(parameterTypes, new Class<?>[] { String.class, CLASS_JNA }))) {
+				//
+				continue;
+				//
+			} // if
+				//
+			clear(collection = ObjectUtils.getIfNull(collection, ArrayList::new));
+			//
+			for (int j = 0; j < parameterTypes.length; j++) {
+				//
+				if (Objects.equals(parameterType = ArrayUtils.get(parameterTypes, j), Class.class)) {
+					//
+					add(collection, Object.class);
+					//
+				} else if (Objects.equals(parameterType, Integer.TYPE)) {
+					//
+					add(collection, Integer.valueOf(0));
+					//
+				} else if (Objects.equals(parameterType, Long.TYPE)) {
+					//
+					add(collection, Long.valueOf(0));
+					//
+				} else if (Objects.equals(parameterType, Boolean.TYPE)) {
+					//
+					add(collection, Boolean.FALSE);
+					//
+				} else if (Objects.equals(parameterType, byte[].class)) {
+					//
+					add(collection, new byte[] {});
+					//
+				} else if (Objects.equals(parameterType, Executable.class)) {
+					//
+					add(collection, Object.class.getDeclaredMethod("toString"));
+					//
+				} else if (parameterType != null && parameterType.isArray()) {
+					//
+					add(collection, Array.newInstance(parameterType.getComponentType(), 0));
+					//
+				} else if (parameterType != null && Modifier.isInterface(parameterType.getModifiers())) {
+					//
+					add(collection, Reflection.newProxy(parameterType, ih));
+					//
+				} else if (parameterType != null && Modifier.isAbstract(parameterType.getModifiers())) {
+					//
+					(proxyFactory = new ProxyFactory()).setSuperclass(parameterType);
+					//
+					if ((object = newInstance(
+							getDeclaredConstructor(proxyFactory.createClass()))) instanceof ProxyObject) {
+						//
+						((ProxyObject) object).setHandler(mh = ObjectUtils.getIfNull(mh, MH::new));
+						//
+					} // if
+						//
+					add(collection, object);
+					//
+				} else {
+					//
+					add(collection, Narcissus.allocateInstance(ArrayUtils.get(parameterTypes, j)));
+					//
+				} // if
+					//
+			} // for
+				//
+			os = toArray(collection);
+			//
+			toString = Objects.toString(m);
+			//
+			if (Modifier.isStatic(m.getModifiers())) {
+				//
+				result = Narcissus.invokeStaticMethod(m, os);
+				//
+			} else {
+				//
+				result = Narcissus.invokeMethod(instance = ObjectUtils.getIfNull(instance, MainServlet::new), m, os);
+				//
+			} // if
+				//
+			if (contains(Arrays.asList(Integer.TYPE, Boolean.TYPE), getReturnType(m))
+					|| Boolean.logicalAnd(Objects.equals(name, "getClass"),
+							Arrays.equals(parameterTypes, new Object[] { Object.class }))
+					|| Boolean.logicalAnd(Objects.equals(name, "getName"),
+							Arrays.equals(parameterTypes, new Object[] { Class.class }))
+					|| Boolean.logicalAnd(Objects.equals(name, "cast"),
+							Arrays.equals(parameterTypes, new Object[] { Class.class, Object.class }))
+					|| Boolean.logicalAnd(Objects.equals(name, "getDeclaredMethods"),
+							Arrays.equals(parameterTypes, new Object[] { Class.class }))
+					|| Boolean.logicalAnd(Objects.equals(name, "IsWindows10OrGreater"), Objects
+							.equals(getName(getClass(FileSystems.getDefault())), "sun.nio.fs.WindowsFileSystem"))) {
+				//
+				Assert.assertNotNull(result, toString);
+				//
+			} else {
+				//
+				Assert.assertNull(result, toString);
+				//
+			} // if
+				//
+		} // for
+			//
+	}
+
+	private static <T> Constructor<T> getDeclaredConstructor(final Class<T> instance, final Class<?>... parameterTypes)
+			throws NoSuchMethodException {
+		return instance != null ? instance.getDeclaredConstructor(parameterTypes) : null;
+	}
+
+	private static <T> T newInstance(final Constructor<T> instance, final Object... args)
+			throws InstantiationException, IllegalAccessException, InvocationTargetException {
+		return instance != null ? instance.newInstance(args) : null;
+	}
+
+	private static boolean contains(final Collection<?> items, final Object item) {
+		return items != null && items.contains(item);
+	}
+
+	private static String getName(final Member instance) {
+		return instance != null ? instance.getName() : null;
+	}
+
+	private static <E> void add(final Collection<E> instance, final E item) {
+		if (instance != null) {
+			instance.add(item);
+		}
+	}
+
+	private static void clear(final Collection<?> instance) {
+		if (instance != null) {
+			instance.clear();
+		}
+	}
+
+	@Test
+	void testDoGet() throws Throwable {
+		//
+		if (instance == null) {
+			//
+			return;
+			//
+		} // if
+			//
+		final Iterable<Method> ms = Arrays.stream(CLASS_JNA != null ? CLASS_JNA.getDeclaredMethods() : null)
+				.filter(m -> m != null && m.getParameterCount() == 0).collect(Collectors.toList());
+		//
+		if ((ih = ObjectUtils.getIfNull(ih, IH::new)) != null && !IterableUtils.isEmpty(ms)) {
+			//
+			ih.servletPath = "/" + getName(IterableUtils.get(ms, 0));
+			//
+		} // if
+			//
+		final HttpServletRequest httpServletRequest = Reflection.newProxy(HttpServletRequest.class, ih);
+		//
+		instance.doGet(httpServletRequest, null);
+		//
+		if (ih != null) {
+			//
+			ih.servletPath = "/getVoiceIds";
+			//
+		} // if
+			//
+		instance.doGet(httpServletRequest, null);
+		//
+		if (ih != null) {
+			//
+			ih.servletPath = "/getVoiceAttribute";
+			//
+		} // if
+			//
+		instance.doGet(httpServletRequest, null);
+		//
+		if (ih != null) {
+			//
+			ih.servletPath = "/getVoiceAttributes";
+			//
+		} // if
+			//
+		instance.doGet(httpServletRequest, null);
+		//
+		if (ih != null) {
+			//
+			ih.servletPath = "/getVoiceAttributes";
+			//
+			if ((ih.parameters = ObjectUtils.getIfNull(ih.parameters, LinkedHashMap::new)) != null) {
+				//
+				ih.parameters.put("id", "TTS_MS_ja-JP_Haruka_11.0");
+				//
+			} // if
+				//
+		} // if
+			//
+		instance.doGet(httpServletRequest, null);
+		//
+		if (ih != null) {
+			//
+			ih.servletPath = "";
+			//
+		} // if
+			//
+		instance.doGet(httpServletRequest, null);
+		//
+		if (ih != null) {
+			//
+			ih.servletPath = "/";
+			//
+		} // if
+			//
+		instance.doGet(httpServletRequest, null);
+		//
+		if (ih != null) {
+			//
+			ih.servletPath = "/.wav";
+			//
+		} // if
+			//
+		instance.doGet(httpServletRequest, null);
+		//
+		if (ih != null) {
+			//
+			ih.servletPath = "/ .wav";
+			//
+		} // if
+			//
+		instance.doGet(httpServletRequest, null);
+		//
+		if (ih != null) {
+			//
+			ih.servletPath = "/getProviderVersion";
+			//
+		} // if
+			//
+		instance.doGet(httpServletRequest, null);
+		//
+	}
+
+	@Test
+	void testTest() throws IllegalAccessException, InvocationTargetException {
+		//
+		if ((ih = ObjectUtils.getIfNull(ih, IH::new)) != null) {
+			//
+			ih.test = Boolean.FALSE;
+			//
+		} // if
+			//
+		Assert.assertEquals(invoke(METHOD_TEST, null, Reflection.newProxy(Predicate.class, ih), null),
+				ih != null ? ih.test : null);
+		//
+	}
+
+	@Test
+	void testToIntArray() throws IllegalAccessException, InvocationTargetException {
+		//
+		final char c = ' ';
+		//
+		Assert.assertEquals(invoke(METHOD_TO_INT_ARRAY, null, new String(new char[] { c })), new int[] { c });
+		//
+	}
+
+	@Test
+	void testCollect() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertNull(invoke(METHOD_COLLECT, null, Stream.empty(), null));
+		//
+		Assert.assertNull(invoke(METHOD_COLLECT, null,
+				Reflection.newProxy(Stream.class, ih = ObjectUtils.getIfNull(ih, IH::new)), null));
+		//
+	}
+
+	@Test
+	void testTestAndAccept() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertNull(invoke(METHOD_TEST_AND_ACCEPT, null, Predicates.alwaysTrue(), null, null));
+		//
+	}
+
+	@Test
+	void testTestAndGet() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertNull(invoke(METHOD_TEST_AND_GET, null, Boolean.TRUE, null));
+		//
+		final Object object = new Object();
+		//
+		Assert.assertSame(invoke(METHOD_TEST_AND_GET, null, Boolean.TRUE, Suppliers.ofInstance(object)), object);
+		//
+	}
+
+	@Test
+	void testTestAndTest() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertEquals(invoke(METHOD_TEST_AND_TEST, null, Boolean.TRUE, null, null, null), Boolean.FALSE);
+		//
+		if ((ih = ObjectUtils.getIfNull(ih, IH::new)) != null) {
+			//
+			ih.test = Boolean.FALSE;
+			//
+		} // if
+			//
+		final BiPredicate<?, ?> biPredicate = Reflection.newProxy(BiPredicate.class, ih);
+		//
+		Assert.assertEquals(invoke(METHOD_TEST_AND_TEST, null, Boolean.TRUE, biPredicate, null, null),
+				ih != null ? ih.test : null);
+		//
+		if ((ih = ObjectUtils.getIfNull(ih, IH::new)) != null) {
+			//
+			ih.test = Boolean.TRUE;
+			//
+		} // if
+			//
+		Assert.assertEquals(invoke(METHOD_TEST_AND_TEST, null, Boolean.TRUE, biPredicate, null, null),
+				ih != null ? ih.test : null);
+		//
+	}
+
+	@Test
+	void testStartsWith() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertEquals(invoke(METHOD_STARTS_WITH, null, "", Narcissus.allocateInstance(String.class)),
+				Boolean.FALSE);
+		//
+	}
+
+	@Test
+	void testEndsWith() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertEquals(invoke(METHOD_ENDS_WITH, null, "", Narcissus.allocateInstance(String.class)),
+				Boolean.FALSE);
+		//
+	}
+
+	@Test
+	void testAnd() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertEquals(invoke(METHOD_AND, null, Boolean.TRUE, Boolean.TRUE, null), Boolean.TRUE);
+		//
+	}
+
+	@Test
+	void testGetIValue0() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertEquals(invoke(METHOD_GET_IVALUE0, null, "/getDllPath", Reflection.newProxy(CLASS_JNA, ih)),
+				Unit.with(null));
+		//
+	}
+
+	@Test
+	void testIsAssignableFrom() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertEquals(invoke(METHOD_IS_ASSIGNABLE_FROM, null, Object.class, null), Boolean.FALSE);
+		//
+	}
+
+	@Test
+	void testJna()
+			throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+		//
+		final Method[] ms = CLASS_JNA != null ? CLASS_JNA.getDeclaredMethods() : null;
+		//
+		Method m = null;
+		//
+		Object result = null;
+		//
+		String toString, name = null;
+		//
+		Collection<Object> collection = null;
+		//
+		Object[] os = null;
+		//
+		Class<?>[] parameterTypes = null;
+		//
+		Class<?> parameterType = null;
+		//
+		Object jna = null;
+		//
+		for (int i = 0; ms != null && i < ms.length; i++) {
+			//
+			if ((m = ArrayUtils.get(ms, i)) == null || m.isSynthetic()
+					|| (parameterTypes = m.getParameterTypes()) == null) {
+				//
+				continue;
+				//
+			} // if
+				//
+			clear(collection = ObjectUtils.getIfNull(collection, ArrayList::new));
+			//
+			for (int j = 0; j < parameterTypes.length; j++) {
+				//
+				if (Objects.equals(ArrayUtils.get(parameterTypes, j), Integer.TYPE)) {
+					//
+					add(collection, Integer.valueOf(0));
+					//
+				} else {
+					//
+					add(collection, null);
+					//
+				} // if
+					//
+			} // for
+				//
+			os = toArray(collection);
+			//
+			toString = Objects.toString(m);
+			//
+			if (Modifier.isStatic(m.getModifiers())) {
+				//
+				result = Narcissus.invokeStaticMethod(m, os);
+				//
+			} else {
+				//
+				result = Narcissus.invokeMethod(
+						jna = ObjectUtils.getIfNull(jna, () -> Reflection.newProxy(CLASS_JNA, ih)), m, os);
+				//
+			} // if
+				//
+			if (Objects.equals(getReturnType(m), Boolean.TYPE)) {
+				//
+				Assert.assertNotNull(result, toString);
+				//
+			} else {
+				//
+				Assert.assertNull(result, toString);
+				//
+			} // if
+				//
+			if (Boolean.logicalAnd(Objects.equals(name = getName(m), "writeVoiceToFile"),
+					Arrays.equals(parameterTypes,
+							new Class<?>[] { int[].class, Integer.TYPE, String.class, Integer.TYPE, Integer.TYPE,
+									int[].class, Integer.TYPE }))
+					|| Boolean.logicalAnd(Objects.equals(name, "writeVoiceToFile"), Arrays.equals(parameterTypes,
+							new Class<?>[] { CLASS_JNA, CLASS_INT_MAP, int[].class, String.class, int[].class }))
+					|| Boolean.logicalAnd(contains(Arrays.asList("speak", "speakSsml"), name), Arrays.equals(
+							parameterTypes,
+							new Class<?>[] { int[].class, Integer.TYPE, String.class, Integer.TYPE, Integer.TYPE }))) {
+				//
+				continue;
+				//
+			} // if
+				//
+			clear(collection = ObjectUtils.getIfNull(collection, ArrayList::new));
+			//
+			for (int j = 0; j < parameterTypes.length; j++) {
+				//
+				if ((parameterType = ArrayUtils.get(parameterTypes, j)) != null && parameterType.isInterface()) {
+					//
+					add(collection, Reflection.newProxy(parameterType, ih));
+					//
+				} else {
+					//
+					add(collection, Narcissus.allocateInstance(parameterType));
+					//
+				} // if
+					//
+			} // for
+				//
+			os = toArray(collection);
+			//
+			toString = Objects.toString(m);
+			//
+			if (Modifier.isStatic(m.getModifiers())) {
+				//
+				result = Narcissus.invokeStaticMethod(m, os);
+				//
+			} else {
+				//
+				result = Narcissus.invokeMethod(
+						jna = ObjectUtils.getIfNull(jna, () -> Reflection.newProxy(CLASS_JNA, ih)), m, os);
+				//
+			} // if
+				//
+			if (Objects.equals(getReturnType(m), Boolean.TYPE)) {
+				//
+				Assert.assertNotNull(result, toString);
+				//
+			} else {
+				//
+				Assert.assertNull(result, toString);
+				//
+			} // if
+				//
+		} // for
+			//
+	}
+
+	@Test
+	void testIntMap() {
+		//
+		final Method[] ms = CLASS_INT_MAP != null ? CLASS_INT_MAP.getDeclaredMethods() : null;
+		//
+		Method m = null;
+		//
+		Object result = null;
+		//
+		String toString = null;
+		//
+		Collection<Object> collection = null;
+		//
+		Object[] os = null;
+		//
+		Class<?>[] parameterTypes = null;
+		//
+		Class<?> parameterType = null;
+		//
+		Object intMap = null;
+		//
+		if (ih != null) {
+			//
+			ih.intValue = Integer.valueOf(0);
+			//
+		} // if
+			//
+		for (int i = 0; ms != null && i < ms.length; i++) {
+			//
+			if ((m = ArrayUtils.get(ms, i)) == null || m.isSynthetic()
+					|| (parameterTypes = m.getParameterTypes()) == null) {
+				//
+				continue;
+				//
+			} // if
+				//
+			clear(collection = ObjectUtils.getIfNull(collection, ArrayList::new));
+			//
+			for (int j = 0; j < parameterTypes.length; j++) {
+				//
+				if (Objects.equals(ArrayUtils.get(parameterTypes, j), Integer.TYPE)) {
+					//
+					add(collection, Integer.valueOf(0));
+					//
+				} else {
+					//
+					add(collection, null);
+					//
+				} // if
+					//
+			} // for
+				//
+			os = toArray(collection);
+			//
+			toString = Objects.toString(m);
+			//
+			if (Modifier.isStatic(m.getModifiers())) {
+				//
+				result = Narcissus.invokeStaticMethod(m, os);
+				//
+			} else {
+				//
+				result = Narcissus.invokeMethod(
+						intMap = ObjectUtils.getIfNull(intMap, () -> Reflection.newProxy(CLASS_INT_MAP, ih)), m, os);
+				//
+			} // if
+				//
+			if (Objects.equals(getReturnType(m), Integer.TYPE)) {
+				//
+				Assert.assertNotNull(result, toString);
+				//
+			} else {
+				//
+				Assert.assertNull(result, toString);
+				//
+			} // if
+				//
+			clear(collection = ObjectUtils.getIfNull(collection, ArrayList::new));
+			//
+			for (int j = 0; j < parameterTypes.length; j++) {
+				//
+				if ((parameterType = ArrayUtils.get(parameterTypes, j)) != null && parameterType.isInterface()) {
+					//
+					add(collection, Reflection.newProxy(parameterType, ih));
+					//
+				} else if (Objects.equals(parameterType, Integer.TYPE)) {
+					//
+					add(collection, Integer.valueOf(0));
+					//
+				} else {
+					//
+					add(collection, Narcissus.allocateInstance(parameterType));
+					//
+				} // if
+					//
+			} // for
+				//
+			os = toArray(collection);
+			//
+			toString = Objects.toString(m);
+			//
+			if (Modifier.isStatic(m.getModifiers())) {
+				//
+				result = Narcissus.invokeStaticMethod(m, os);
+				//
+			} else {
+				//
+				result = Narcissus.invokeMethod(
+						intMap = ObjectUtils.getIfNull(intMap, () -> Reflection.newProxy(CLASS_INT_MAP, ih)), m, os);
+				//
+			} // if
+				//
+			if (Objects.equals(getReturnType(m), Integer.TYPE)) {
+				//
+				Assert.assertNotNull(result, toString);
+				//
+			} else {
+				//
+				Assert.assertNull(result, toString);
+				//
+			} // if
+				//
+		} // for
+			//
+	}
+
+	@Test
+	void testIH() throws Throwable {
+		//
+		final Class<?> clz = Class.forName("jakarta.servlet.http.MainServlet$IH");
+		//
+		final Method[] ms = clz != null ? clz.getDeclaredMethods() : null;
+		//
+		Method m = null;
+		//
+		Object result = null;
+		//
+		String toString = null;
+		//
+		Collection<Object> collection = null;
+		//
+		Object[] os = null;
+		//
+		Class<?>[] parameterTypes = null;
+		//
+		Class<?> parameterType = null;
+		//
+		Object object = null;
+		//
+		if (ih != null) {
+			//
+			ih.containsKey = Boolean.FALSE;
+			//
+		} // if
+			//
+		for (int i = 0; ms != null && i < ms.length; i++) {
+			//
+			if ((m = ArrayUtils.get(ms, i)) == null || m.isSynthetic()
+					|| (parameterTypes = m.getParameterTypes()) == null) {
+				//
+				continue;
+				//
+			} // if
+				//
+			os = toArray(Collections.nCopies(m.getParameterCount(), null));
+			//
+			toString = Objects.toString(m);
+			//
+			if (Modifier.isStatic(m.getModifiers())) {
+				//
+				result = Narcissus.invokeStaticMethod(m, os);
+				//
+			} else if (Boolean.logicalAnd(Objects.equals(getName(m), "invoke"),
+					Arrays.equals(parameterTypes, new Class<?>[] { Object.class, Method.class, Object[].class }))) {
+				//
+				final Object o = object = ObjectUtils.getIfNull(object, () -> Narcissus.allocateInstance(clz));
+				//
+				final Method m1 = m;
+				//
+				final Object[] os1 = os;
+				//
+				Assert.assertThrows(() -> Narcissus.invokeMethod(o, m1, os1));
+				//
+				continue;
+				//
+			} // if
+				//
+			if (Objects.equals(getReturnType(m), Boolean.TYPE)) {
+				//
+				Assert.assertNotNull(result, toString);
+				//
+			} else {
+				//
+				Assert.assertNull(result, toString);
+				//
+			} // if
+				//
+			clear(collection = ObjectUtils.getIfNull(collection, ArrayList::new));
+			//
+			for (int j = 0; j < parameterTypes.length; j++) {
+				//
+				if ((parameterType = ArrayUtils.get(parameterTypes, j)) != null && parameterType.isInterface()) {
+					//
+					add(collection, Reflection.newProxy(parameterType, ih));
+					//
+				} else {
+					//
+					add(collection, Narcissus.allocateInstance(parameterType));
+					//
+				} // if
+					//
+			} // for
+				//
+			toString = Objects.toString(m);
+			//
+			result = Narcissus.invokeStaticMethod(m, toArray(collection));
+			//
+			if (Objects.equals(getReturnType(m), Boolean.TYPE)) {
+				//
+				Assert.assertNotNull(result, toString);
+				//
+			} else {
+				//
+				Assert.assertNull(result, toString);
+				//
+			} // if
+				//
+		} // for
+			//
+		final InvocationHandler invocationHandler = cast(InvocationHandler.class, object);
+		//
+		if (invocationHandler != null) {
+			//
+			final Object intMap = Reflection.newProxy(CLASS_INT_MAP, invocationHandler);
+			//
+			final Method getInt = CLASS_INT_MAP != null ? CLASS_INT_MAP.getDeclaredMethod("getInt", String.class)
+					: null;
+			//
+			Assert.assertThrows(() -> invocationHandler.invoke(intMap, getInt, null));
+			//
+			Assert.assertThrows(() -> invocationHandler.invoke(intMap, getInt, new Object[] {}));
+			//
+			Assert.assertThrows(() -> invocationHandler.invoke(intMap, getInt, new Object[] { null }));
+			//
+			final Integer integer = Integer.valueOf(0);
+			//
+			final Method setInt = CLASS_INT_MAP != null
+					? CLASS_INT_MAP.getDeclaredMethod("setInt", String.class, Integer.TYPE)
+					: null;
+			//
+			Assert.assertThrows(() -> invocationHandler.invoke(intMap, setInt, null));
+			//
+			Assert.assertThrows(() -> invocationHandler.invoke(intMap, setInt, new Object[] {}));
+			//
+			Assert.assertNull(invocationHandler.invoke(intMap, setInt, new Object[] { null, integer }));
+			//
+			Assert.assertEquals(invocationHandler.invoke(intMap, getInt, new Object[] { null }), integer);
+			//
+		} // if
+			//
+	}
+
+	private static String getName(final Class<?> instance) throws Throwable {
+		try {
+			final Object obj = invoke(METHOD_GET_NAME, null, instance);
+			if (obj == null) {
+				return null;
+			} else if (obj instanceof String) {
+				return (String) obj;
+			}
+			throw new Throwable(getName(getClass(obj)));
+		} catch (final InvocationTargetException e) {
+			throw e.getTargetException();
+		}
+	}
+
+	private static Class<?> getClass(final Object instance) throws Throwable {
+		try {
+			final Object obj = invoke(METHOD_GET_CLASS, null, instance);
+			if (obj == null) {
+				return null;
+			} else if (obj instanceof Class<?>) {
+				return (Class<?>) obj;
+			}
+			throw new Throwable(getName(getClass(obj)));
+		} catch (final InvocationTargetException e) {
+			throw e.getTargetException();
+		}
+	}
+
+}

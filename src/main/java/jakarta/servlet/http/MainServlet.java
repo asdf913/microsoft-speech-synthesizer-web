@@ -1,0 +1,708 @@
+package jakarta.servlet.http;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.lang.reflect.Executable;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Proxy;
+import java.nio.file.FileSystems;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.BiPredicate;
+import java.util.function.BooleanSupplier;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.apache.commons.collections4.IterableUtils;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.function.FailableConsumer;
+import org.apache.commons.lang3.math.NumberUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.javatuples.Unit;
+import org.javatuples.valueintf.IValue0;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.reflect.Reflection;
+import com.j256.simplemagic.ContentInfo;
+import com.j256.simplemagic.ContentInfoUtil;
+import com.j256.simplemagic.ContentType;
+import com.sun.jna.Library;
+import com.sun.jna.Native;
+import com.sun.jna.Pointer;
+import com.sun.jna.platform.win32.Advapi32Util;
+import com.sun.jna.platform.win32.WinReg;
+import com.sun.jna.platform.win32.WinReg.HKEY;
+import com.sun.jna.ptr.IntByReference;
+
+import io.github.toolfactory.narcissus.Narcissus;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+
+public class MainServlet extends HttpServlet {
+
+	private static final long serialVersionUID = -5176135849319893425L;
+
+	private static final String VALUE = "value";
+
+	private static final String APPLICATION_JSON = "application/json";
+
+	private static final String VOLUME = "volume";
+
+	private interface Jna extends Library {
+
+		void speak(final int[] text, final int length, final String voiceId, final int rate, final int volume);
+
+		void speakSsml(final int[] text, final int length, final String voiceId, final int rate, final int volume);
+
+		void writeVoiceToFile(final int[] text, final int textLength, final String voiceId, final int rate,
+				final int volume, final int[] fileName, final int fileNameLength);
+
+		Pointer getVoiceIds(final IntByReference length);
+
+		String getVoiceAttribute(final String voiceId, final String attribute);
+
+		String getProviderPlatform();
+
+		String getDllPath();
+
+		static String getVoiceAttribute(final Jna instance, final String voiceId, final String attribute) {
+			return instance != null ? instance.getVoiceAttribute(voiceId, attribute) : null;
+		}
+
+		static void writeVoiceToFile(final Jna instance, final IntMap intMap, final int[] text, final String voiceId,
+				final int[] fileName) {
+			//
+			if (instance != null) {
+				//
+				instance.writeVoiceToFile(text, IntMap.getInt(intMap, "textLength", 0), voiceId,
+						IntMap.getInt(intMap, "rate", 0), IntMap.getInt(intMap, VOLUME, 0), fileName,
+						IntMap.getInt(intMap, "fileNameLength", 0));
+				//
+			} // if
+				//
+		}
+
+	}
+
+	private static interface IntMap {
+
+		int getInt(final String key);
+
+		void setInt(final String key, final int value);
+
+		static int getInt(final IntMap instance, final String key, final int defaultValue) {
+			return instance != null ? instance.getInt(key) : defaultValue;
+		}
+
+	}
+
+	private static class IH implements InvocationHandler {
+
+		private Map<Object, Object> map = null;
+
+		@Override
+		public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
+			//
+			final String name = getName(method);
+			//
+			if (proxy instanceof IntMap) {
+				//
+				if (Objects.equals(name, "getInt") && args != null && args.length > 0) {
+					//
+					final Object arg = ArrayUtils.get(args, 0);
+					//
+					if (!containsKey(map = ObjectUtils.getIfNull(map, LinkedHashMap::new), arg)) {
+						//
+						throw new IllegalStateException(String.format("Key not found [%1$s]", arg));
+						//
+					} // if
+						//
+					return get(map, arg);
+					//
+				} else if (Objects.equals(name, "setInt") && args != null && args.length > 1) {
+					//
+					put(map = ObjectUtils.getIfNull(map, LinkedHashMap::new), ArrayUtils.get(args, 0),
+							ArrayUtils.get(args, 1));
+					//
+					return null;
+					//
+				} // if
+					//
+			} // if
+				//
+			throw new Throwable(name);
+			//
+		}
+
+		private static <K, V> void put(final Map<K, V> instance, final K key, final V value) {
+			if (instance != null) {
+				instance.put(key, value);
+			}
+		}
+
+		private static boolean containsKey(final Map<?, ?> instance, final Object key) {
+			return instance != null && instance.containsKey(key);
+		}
+
+		private static <V> V get(final Map<?, V> instance, final Object key) {
+			return instance != null ? instance.get(key) : null;
+		}
+
+	}
+
+	@Override
+	protected void doGet(final HttpServletRequest request, final HttpServletResponse response)
+			throws ServletException, IOException {
+		//
+		final String servletPath = getServletPath(request);
+		//
+		Jna jna = null;
+		//
+		final boolean isWindows = Objects.equals(getName(getClass(FileSystems.getDefault())),
+				"sun.nio.fs.WindowsFileSystem");
+		//
+		try {
+			//
+			jna = testAndGet(isWindows && Objects.equals(Boolean.TRUE, IsWindows10OrGreater()),
+					() -> Native.load("MicrosoftSpeechApi10.dll", Jna.class));
+			//
+			final IValue0<Object> iValue0 = getIValue0(servletPath, jna);
+			//
+			if (iValue0 != null) {
+				//
+				try (final OutputStream os = getOutputStream(response)) {
+					//
+					write(os, getBytes(Objects.toString(iValue0.getValue0())));
+					//
+					return;
+					//
+				} // try
+					//
+			} // if
+				//
+		} catch (final IllegalAccessException | ClassNotFoundException e) {
+			//
+			throw new ServletException(e);
+			//
+		} catch (final InvocationTargetException e) {
+			//
+			throw new ServletException(e != null ? e.getTargetException() : e);
+			//
+		} // try
+			//
+		if (Objects.equals(servletPath, "/getVoiceIds")) {
+			//
+			try (final OutputStream os = getOutputStream(response)) {
+				//
+				setContentType(response, APPLICATION_JSON);
+				//
+				final IntByReference lengthIbr = new IntByReference();
+				//
+				final Pointer pointer = jna != null ? jna.getVoiceIds(lengthIbr) : null;
+				//
+				final int length = lengthIbr.getValue();
+				//
+				final Pointer[] pointers = pointer != null ? pointer.getPointerArray(0, length) : null;
+				//
+				List<String> list = null;
+				//
+				for (int i = 0; pointers != null && i < Math.min(pointers.length, length); i++) {
+					//
+					add(list = ObjectUtils.getIfNull(list, ArrayList::new), getWideString(pointers[i], 0));
+					//
+				} // for
+					//
+				write(os, new ObjectMapper().writeValueAsBytes(list));
+				//
+			} // try
+				//
+		} else if (Objects.equals(servletPath, "/getVoiceAttribute")) {
+			//
+			try (final OutputStream os = getOutputStream(response)) {
+				//
+				setContentType(response, APPLICATION_JSON);
+				//
+				write(os, new ObjectMapper().writeValueAsBytes(StringUtils.split(
+						Jna.getVoiceAttribute(jna, getParameter(request, "id"), getParameter(request, "attribute")),
+						",")));
+				//
+			} // try
+				//
+		} else if (Objects.equals(servletPath, "/getVoiceAttributes")) {
+			//
+			try (final OutputStream os = getOutputStream(response)) {
+				//
+				setContentType(response, APPLICATION_JSON);
+				//
+				final HKEY hkey = WinReg.HKEY_LOCAL_MACHINE;
+				//
+				final String key = String.join("\\", "SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens",
+						getParameter(request, "id"), "Attributes");
+				//
+				if (testAndTest(isWindows, Advapi32Util::registryKeyExists, hkey, key)) {
+					//
+					write(os, new ObjectMapper().writeValueAsBytes(Advapi32Util.registryGetValues(hkey, key)));
+					//
+				} // if
+					//
+			} // try
+				//
+			return;
+			//
+		} // if
+			//
+
+		write(request, response, jna);
+		//
+	}
+
+	private static String getWideString(final Pointer instance, final long offset) {
+		return instance != null ? instance.getWideString(offset) : null;
+	}
+
+	private static Boolean IsWindows10OrGreater()
+			throws ClassNotFoundException, IllegalAccessException, InvocationTargetException {
+		//
+		final List<Method> ms = toList(filter(
+				Arrays.stream(getDeclaredMethods(Class.forName("com.sun.jna.platform.win32.VersionHelpers"))),
+				m -> and(Objects.equals(getName(m), "IsWindows10OrGreater"), getParameterCount(m) == 0, isStatic(m))));
+		//
+		if (ms == null || ms.isEmpty()) {
+			//
+			return null;
+			//
+		} // if
+			//
+		return cast(Boolean.class, Narcissus.invokeStaticMethod(ms.size() == 1 ? ms.get(0) : null));
+		//
+	}
+
+	private static <T> List<T> toList(final Stream<T> instance) throws ClassNotFoundException {
+		//
+		if (instance == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+			// java.util.stream.AbstractPipeline.sourceStage
+			//
+		if (isAssignableFrom(Class.forName("java.util.stream.AbstractPipeline"), getClass(instance))) {
+			//
+			final Stream<Field> s = filter(stream(FieldUtils.getAllFieldsList(getClass(instance))),
+					f -> Objects.equals(getName(f), "sourceStage"));
+			//
+			final List<Field> fs = s != null ? s.toList() : null;
+			//
+			final int size = IterableUtils.size(fs);
+			//
+			if (size > 1) {
+				//
+				throw new IllegalStateException();
+				//
+			} else if (testAndApply(x -> !isStatic(x),
+					testAndApply(x -> IterableUtils.size(x) == 1, fs, x -> IterableUtils.get(x, 0), null),
+					x -> Narcissus.getField(instance, x), null) == null) {
+				//
+				return null;
+				//
+			} // if
+				//
+		} // if
+			//
+			//
+		return instance.toList();
+		//
+	}
+
+	private static boolean isStatic(final Member instance) {
+		return instance != null && Modifier.isStatic(instance.getModifiers());
+	}
+
+	private static boolean isAssignableFrom(final Class<?> a, final Class<?> b) {
+		return a != null && b != null && a.isAssignableFrom(b);
+	}
+
+	private static Method[] getDeclaredMethods(final Class<?> instance) {
+		return instance != null ? instance.getDeclaredMethods() : null;
+	}
+
+	private static <E> void add(final Collection<E> items, final E item) {
+		if (items != null) {
+			items.add(item);
+		}
+	}
+
+	private static void write(final HttpServletRequest request, final HttpServletResponse response, final Jna jna)
+			throws IOException {
+		//
+		final String servletPath = getServletPath(request);
+		//
+		if (and(startsWith(servletPath, "/"), endsWith(servletPath, ".wav"), StringUtils.length(servletPath) > 5)) {
+			//
+			File file = null;
+			//
+			try (final OutputStream os = getOutputStream(response)) {
+				//
+				final int[] ints1 = toIntArray(
+						StringUtils.substring(servletPath, 1, StringUtils.length(servletPath) - 4));
+				//
+				final int[] ints2 = toIntArray(getAbsolutePath(file = File
+						.createTempFile(RandomStringUtils.secureStrong().nextAlphabetic(3), null, new File("."))));
+				//
+				if (ints1 != null) {
+					//
+					final IH ih = new IH();
+					//
+					final IntMap intMap = Reflection.newProxy(IntMap.class, ih);
+					//
+					if (intMap != null) {
+						//
+						intMap.setInt("textLength", length(ints1));
+						//
+						intMap.setInt("rate", NumberUtils.toInt(getParameter(request, "rate"), 0));
+						//
+						intMap.setInt(VOLUME, NumberUtils.toInt(getParameter(request, VOLUME), 100));
+						//
+						intMap.setInt("fileNameLength", length(ints2));
+						//
+					} // if
+						//
+					if (!isTestMode()) {
+						//
+						Jna.writeVoiceToFile(jna, intMap, ints1, getParameter(request, "voiceId"), ints2);
+						//
+					} // if
+						//
+				} // if
+					//
+				final byte[] bs = FileUtils.readFileToByteArray(file);
+				//
+				setContentType(response, getMimeType(getContentType(new ContentInfoUtil().findMatch(bs))));
+				//
+				setContentLength(response, length(bs));
+				//
+				write(os, bs);
+				//
+			} finally {
+				//
+				testAndAccept(Objects::nonNull, file, FileUtils::delete);
+				//
+			} // try
+				//
+		} // if
+			//
+	}
+
+	private static IValue0<Object> getIValue0(final String servletPath, final Jna jna)
+			throws IllegalAccessException, InvocationTargetException {
+		//
+		final Iterable<Method> ms = collect(filter(Arrays.stream(Jna.class.getDeclaredMethods()),
+				m -> Boolean.logicalAnd(Objects.equals("/" + getName(m), servletPath), getParameterCount(m) == 0)),
+				Collectors.toList());
+		//
+		if (IterableUtils.size(ms) == 1 && jna != null) {
+			//
+			return Unit.with(Narcissus.invokeMethod(jna, IterableUtils.get(ms, 0)));
+			//
+		} // if
+			//
+		return null;
+		//
+	}
+
+	private static boolean and(final boolean a, final boolean b, final boolean... bs) {
+		//
+		boolean result = a && b;
+		//
+		if (!result) {
+			//
+			return false;
+			//
+		} // if
+			//
+		for (int i = 0; bs != null && i < bs.length; i++) {
+			//
+			if (!(result &= bs[i])) {
+				//
+				return false;
+				//
+			} // if
+				//
+		} // for
+			//
+		return result;
+		//
+	}
+
+	private static boolean startsWith(final String a, final String b) {
+		//
+		if (a == null || b == null) {
+			//
+			return false;
+			//
+		} // if
+			//
+		if (Boolean.logicalAnd(!isTestMode(), !Narcissus.libraryLoaded)) {
+			//
+			return a.startsWith(b);
+			//
+		} // if
+			//
+		final Field value = testAndApply(x -> IterableUtils.size(x) == 1,
+				collect(filter(stream(FieldUtils.getAllFieldsList(getClass(a))),
+						f -> Objects.equals(getName(f), VALUE)), Collectors.toList()),
+				x -> IterableUtils.get(x, 0), null);
+		//
+		return value == null || and(Narcissus.libraryLoaded, () -> Narcissus.getField(a, value) != null,
+				() -> Narcissus.getField(b, value) != null) && a.startsWith(b);
+		//
+	}
+
+	private static boolean endsWith(final String a, final String b) {
+		//
+		if (a == null || b == null) {
+			//
+			return false;
+			//
+		} // if
+			//
+		if (Boolean.logicalAnd(!isTestMode(), !Narcissus.libraryLoaded)) {
+			//
+			return a.endsWith(b);
+			//
+		} // if
+			//
+		final Field value = testAndApply(x -> IterableUtils.size(x) == 1,
+				collect(filter(stream(FieldUtils.getAllFieldsList(getClass(a))),
+						f -> Objects.equals(getName(f), VALUE)), Collectors.toList()),
+				x -> IterableUtils.get(x, 0), null);
+		//
+		return value == null || and(Narcissus.libraryLoaded, () -> Narcissus.getField(a, value) != null,
+				() -> Narcissus.getField(b, value) != null) && a.endsWith(b);
+		//
+	}
+
+	private static boolean and(final boolean condition, final BooleanSupplier a, final BooleanSupplier b) {
+		return condition && getAsBoolean(a) && getAsBoolean(b);
+	}
+
+	private static boolean getAsBoolean(final BooleanSupplier instance) {
+		return instance != null && instance.getAsBoolean();
+	}
+
+	private static <T, U> boolean testAndTest(final boolean condition, final BiPredicate<T, U> predicate, final T t,
+			final U u) {
+		return condition && predicate != null && predicate.test(t, u);
+	}
+
+	private static <T> T testAndGet(final boolean condition, final Supplier<T> supplier) {
+		return condition && supplier != null ? supplier.get() : null;
+	}
+
+	private static <T> T cast(final Class<T> clz, final Object value) {
+		return clz != null && clz.isInstance(value) ? clz.cast(value) : null;
+	}
+
+	private static int getParameterCount(final Executable instance) {
+		return instance != null ? instance.getParameterCount() : 0;
+	}
+
+	private static <T, E extends Throwable> void testAndAccept(final Predicate<T> predicate, final T value,
+			final FailableConsumer<T, E> consumer) throws E {
+		if (test(predicate, value) && consumer != null) {
+			consumer.accept(value);
+		}
+	}
+
+	private static String getServletPath(final HttpServletRequest instance) {
+		return instance != null ? instance.getServletPath() : null;
+	}
+
+	private static void setContentLength(final ServletResponse instance, final int len) {
+		if (instance != null) {
+			instance.setContentLength(len);
+		}
+	}
+
+	private static void setContentType(final ServletResponse instance, final String type) {
+		if (instance != null) {
+			instance.setContentType(type);
+		}
+	}
+
+	private static String getParameter(final ServletRequest instance, final String parameter) {
+		//
+		if (instance == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Class<?> clz = getClass(instance);
+		//
+		if (clz != null && Proxy.isProxyClass(clz)) {
+			//
+			final Field value = testAndApply(x -> IterableUtils.size(x) == 1,
+					collect(filter(stream(FieldUtils.getAllFieldsList(getClass(parameter))),
+							f -> Objects.equals(getName(f), VALUE)), Collectors.toList()),
+					x -> IterableUtils.get(x, 0), null);
+			//
+			if (value != null && Narcissus.getField(parameter, value) == null) {
+				//
+				return null;
+				//
+			} // if
+				//
+		} // if
+			//
+		return instance.getParameter(parameter);
+		//
+	}
+
+	private static ContentType getContentType(final ContentInfo instance) {
+		return instance != null ? instance.getContentType() : null;
+	}
+
+	private static String getMimeType(final ContentType instance) {
+		return instance != null ? instance.getMimeType() : null;
+	}
+
+	private static ServletOutputStream getOutputStream(final ServletResponse instance) throws IOException {
+		return instance != null ? instance.getOutputStream() : null;
+	}
+
+	private static void write(final OutputStream instance, final byte[] bs) throws IOException {
+		if (instance != null) {
+			instance.write(bs);
+		}
+	}
+
+	private static byte[] getBytes(final String instance) {
+		//
+		if (instance == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Field value = testAndApply(x -> IterableUtils.size(x) == 1,
+				collect(filter(stream(FieldUtils.getAllFieldsList(getClass(instance))),
+						f -> Objects.equals(getName(f), VALUE)), Collectors.toList()),
+				x -> IterableUtils.get(x, 0), null);
+		//
+		return value == null || Narcissus.getField(instance, value) != null ? instance.getBytes() : null;
+		//
+	}
+
+	private static <T> boolean test(final Predicate<T> predicate, final T value) {
+		return predicate != null && predicate.test(value);
+	}
+
+	private static String getAbsolutePath(final File instance) {
+		return instance != null && instance.getPath() != null ? instance.getAbsolutePath() : null;
+	}
+
+	private static int length(final byte[] instance) {
+		return instance != null ? instance.length : 0;
+	}
+
+	private static int length(final int[] instance) {
+		return instance != null ? instance.length : 0;
+	}
+
+	private static int[] toIntArray(final String text) {
+		//
+		if (text == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Field value = testAndApply(x -> IterableUtils.size(x) == 1,
+				collect(filter(stream(FieldUtils.getAllFieldsList(getClass(text))),
+						f -> Objects.equals(getName(f), VALUE)), Collectors.toList()),
+				x -> IterableUtils.get(x, 0), null);
+		//
+		final char[] cs = !isTestMode() || value == null || Narcissus.getField(text, value) != null ? text.toCharArray()
+				: null;
+		//
+		final int[] ints = cs != null ? new int[cs.length] : null;
+		//
+		for (int i = 0; cs != null && ints != null && i < cs.length; i++) {
+			//
+			ints[i] = cs[i];
+			//
+		} // for
+			//
+		return ints;
+		//
+	}
+
+	private static boolean isTestMode() {
+		try {
+			return Class.forName("org.testng.annotations.Test") != null;
+		} catch (final ClassNotFoundException e) {
+			return false;
+		}
+	}
+
+	private static <T> Stream<T> stream(final Collection<T> instance) {
+		return instance != null ? instance.stream() : null;
+	}
+
+	private static <T, R> R testAndApply(final Predicate<T> predicate, final T t, final Function<T, R> functionTrue,
+			final Function<T, R> functionFalse) {
+		return test(predicate, t) ? apply(functionTrue, t) : apply(functionFalse, t);
+	}
+
+	private static <T, R> R apply(final Function<T, R> instance, final T t) {
+		return instance != null ? instance.apply(t) : null;
+	}
+
+	private static <T, R, A> R collect(final Stream<T> instance, final Collector<? super T, A, R> collector) {
+		//
+		return instance != null && (collector != null || Proxy.isProxyClass(getClass(instance)))
+				? instance.collect(collector)
+				: null;
+		//
+	}
+
+	private static <T> Stream<T> filter(final Stream<T> instance, final Predicate<? super T> predicate) {
+		return instance != null ? instance.filter(predicate) : instance;
+	}
+
+	private static String getName(final Class<?> instance) {
+		return instance != null ? instance.getName() : null;
+	}
+
+	private static String getName(final Member instance) {
+		return instance != null ? instance.getName() : null;
+	}
+
+	private static Class<?> getClass(final Object instance) {
+		return instance != null ? instance.getClass() : null;
+	}
+
+}
