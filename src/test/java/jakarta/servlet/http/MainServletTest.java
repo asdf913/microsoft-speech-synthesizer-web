@@ -755,8 +755,7 @@ class MainServletTest {
 	}
 
 	@Test
-	void testJna()
-			throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+	void testJna() {
 		//
 		final Method[] ms = CLASS_JNA != null ? CLASS_JNA.getDeclaredMethods() : null;
 		//

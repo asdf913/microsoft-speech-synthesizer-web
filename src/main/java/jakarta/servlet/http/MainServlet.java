@@ -6,7 +6,6 @@ import java.io.OutputStream;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -201,13 +200,9 @@ public class MainServlet extends HttpServlet {
 					//
 			} // if
 				//
-		} catch (final IllegalAccessException | ClassNotFoundException e) {
+		} catch (final ClassNotFoundException e) {
 			//
 			throw new ServletException(e);
-			//
-		} catch (final InvocationTargetException e) {
-			//
-			throw new ServletException(e != null ? e.getTargetException() : e);
 			//
 		} // try
 			//
@@ -281,8 +276,7 @@ public class MainServlet extends HttpServlet {
 		return instance != null ? instance.getWideString(offset) : null;
 	}
 
-	private static Boolean IsWindows10OrGreater()
-			throws ClassNotFoundException, IllegalAccessException, InvocationTargetException {
+	private static Boolean IsWindows10OrGreater() throws ClassNotFoundException {
 		//
 		final List<Method> ms = toList(filter(
 				Arrays.stream(getDeclaredMethods(Class.forName("com.sun.jna.platform.win32.VersionHelpers"))),
@@ -419,8 +413,7 @@ public class MainServlet extends HttpServlet {
 			//
 	}
 
-	private static IValue0<Object> getIValue0(final String servletPath, final Jna jna)
-			throws IllegalAccessException, InvocationTargetException {
+	private static IValue0<Object> getIValue0(final String servletPath, final Jna jna) {
 		//
 		final Iterable<Method> ms = collect(filter(Arrays.stream(Jna.class.getDeclaredMethods()),
 				m -> Boolean.logicalAnd(Objects.equals("/" + getName(m), servletPath), getParameterCount(m) == 0)),
