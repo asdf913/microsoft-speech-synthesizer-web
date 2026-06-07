@@ -14,6 +14,10 @@
       <td>https://web.archive.org/web/20150729124701/http://www.microsoft.com/en-us/windows</td>
     </tr>
     <tr>
+      <td>.NET Framework 3.5</td>
+      <td><a href="https://learn.microsoft.com/en-us/dotnet/framework/install/dotnet-35-windows">Install .NET Framework 3.5 on Windows 10 - .NET Framework | Microsoft Learn</td>
+    </tr>
+    <tr>
       <td>Java SE 17</td>
       <td>https://www.oracle.com/java/technologies/downloads/#java17</td>
     </tr>
