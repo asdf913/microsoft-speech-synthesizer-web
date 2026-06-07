@@ -267,7 +267,6 @@ public class MainServlet extends HttpServlet {
 			//
 		} // if
 			//
-
 		write(request, response, jna);
 		//
 	}
