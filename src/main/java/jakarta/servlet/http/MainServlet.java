@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.io.Writer;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
@@ -222,7 +223,7 @@ public class MainServlet extends HttpServlet {
 			final Class<?> clz = getClass();
 			//
 			try (final InputStream is = clz != null ? clz.getResourceAsStream("/index.ftl") : null;
-					final Writer writer = response != null ? response.getWriter() : null) {
+					final Writer writer = getWriter(response)) {
 				//
 				final Configuration configuration = new Configuration(Configuration.VERSION_2_3_34);
 				//
@@ -653,6 +654,10 @@ public class MainServlet extends HttpServlet {
 
 	private static String getMimeType(final ContentType instance) {
 		return instance != null ? instance.getMimeType() : null;
+	}
+
+	private static PrintWriter getWriter(final ServletResponse instance) throws IOException {
+		return instance != null ? instance.getWriter() : null;
 	}
 
 	private static ServletOutputStream getOutputStream(final ServletResponse instance) throws IOException {
