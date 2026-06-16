@@ -1,5 +1,8 @@
 package jakarta.servlet.http;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
@@ -112,6 +115,8 @@ class MainServletTest {
 
 		private Integer intValue, modifiers = null;
 
+		private PrintWriter printWriter = null;
+
 		@Override
 		public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
 			//
@@ -128,6 +133,10 @@ class MainServletTest {
 				if (Objects.equals(name, "getOutputStream")) {
 					//
 					return null;
+					//
+				} else if (Objects.equals(name, "getWriter")) {
+					//
+					return printWriter;
 					//
 				} // if
 					//
@@ -618,6 +627,18 @@ class MainServletTest {
 			//
 		instance.doGet(httpServletRequest, null);
 		//
+		try (final Writer w = new StringWriter(); final PrintWriter pw = new PrintWriter(w)) {
+			//
+			if (ih != null) {
+				//
+				ih.printWriter = pw;
+				//
+			} // if
+				//
+			instance.doGet(httpServletRequest, Reflection.newProxy(HttpServletResponse.class, ih));
+			//
+		} // try
+			//
 		if (ih != null) {
 			//
 			ih.servletPath = "/.wav";

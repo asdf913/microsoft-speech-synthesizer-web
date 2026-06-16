@@ -2,7 +2,9 @@ package jakarta.servlet.http;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Writer;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationHandler;
@@ -29,6 +31,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -52,6 +55,10 @@ import com.sun.jna.platform.win32.WinReg;
 import com.sun.jna.platform.win32.WinReg.HKEY;
 import com.sun.jna.ptr.IntByReference;
 
+import freemarker.cache.ByteArrayTemplateLoader;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
 import io.github.toolfactory.narcissus.Narcissus;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletOutputStream;
@@ -206,7 +213,62 @@ public class MainServlet extends HttpServlet {
 			//
 		} // try
 			//
-		if (Objects.equals(servletPath, "/getVoiceIds")) {
+		if (Objects.equals(servletPath, "/")) {
+			//
+			final Class<?> clz = getClass();
+			//
+			try (final InputStream is = clz != null ? clz.getResourceAsStream("/index.ftl") : null;
+					final Writer writer = response != null ? response.getWriter() : null) {
+				//
+				final Configuration configuration = new Configuration(Configuration.VERSION_2_3_34);
+				//
+				final ByteArrayTemplateLoader batl = new ByteArrayTemplateLoader();
+				//
+				batl.putTemplate("", IOUtils.toByteArray(is));
+				//
+				configuration.setTemplateLoader(batl);
+				//
+				final Template template = configuration.getTemplate("");
+				//
+				try {
+					//
+					final Map<Object, Object> map = new LinkedHashMap<>();
+					//
+					final IntByReference lengthIbr = new IntByReference();
+					//
+					final Pointer pointer = jna != null ? jna.getVoiceIds(lengthIbr) : null;
+					//
+					final int length = lengthIbr.getValue();
+					//
+					final Pointer[] pointers = pointer != null ? pointer.getPointerArray(0, length) : null;
+					//
+					List<String> list = null;
+					//
+					for (int i = 0; pointers != null && i < Math.min(pointers.length, length); i++) {
+						//
+						add(list = ObjectUtils.getIfNull(list, ArrayList::new), getWideString(pointers[i], 0));
+						//
+					} // for
+						//
+					map.put("voiceIds", list);
+					//
+					if (template != null && writer != null) {
+						//
+						template.process(map, writer);
+						//
+					} // if
+						//
+				} catch (final TemplateException | IOException e) {
+					//
+					throw new ServletException(e);
+					//
+				} // try
+					//
+				return;
+				//
+			} // try
+				//
+		} else if (Objects.equals(servletPath, "/getVoiceIds")) {
 			//
 			try (final OutputStream os = getOutputStream(response)) {
 				//
