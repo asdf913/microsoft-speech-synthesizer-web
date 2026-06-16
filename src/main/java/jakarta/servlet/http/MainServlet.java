@@ -279,8 +279,7 @@ public class MainServlet extends HttpServlet {
 					map.put("voiceAttributes", rowMap);
 					//
 					map.put("attributes",
-							collect(stream(rowMap != null ? rowMap.values() : null).flatMap(x -> stream(keySet(x))),
-									Collectors.toSet()));
+							collect(stream(values(rowMap)).flatMap(x -> stream(keySet(x))), Collectors.toSet()));
 					//
 					template.process(map, writer);
 					//
@@ -345,6 +344,10 @@ public class MainServlet extends HttpServlet {
 
 	private static <K> Set<K> keySet(final Map<K, ?> instance) {
 		return instance != null ? instance.keySet() : null;
+	}
+
+	private static <V> Collection<V> values(final Map<?, V> instance) {
+		return instance != null ? instance.values() : null;
 	}
 
 	private static List<String> getVoiceIds(final Jna jna) {

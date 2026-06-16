@@ -213,7 +213,7 @@ class MainServletTest {
 					//
 			} else if (proxy instanceof Map) {
 				//
-				if (contains(Arrays.asList("put", "get", "keySet"), name)) {
+				if (contains(Arrays.asList("put", "get", "keySet", "values"), name)) {
 					//
 					return null;
 					//
