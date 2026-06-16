@@ -41,6 +41,7 @@ import org.testng.annotations.Test;
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
 import com.google.common.reflect.Reflection;
+import com.sun.jna.Pointer;
 
 import io.github.toolfactory.narcissus.Narcissus;
 import jakarta.servlet.ServletRequest;
@@ -505,6 +506,8 @@ class MainServletTest {
 							Arrays.equals(parameterTypes, new Object[] { Class.class, Object.class }))
 					|| Boolean.logicalAnd(Objects.equals(name, "getDeclaredMethods"),
 							Arrays.equals(parameterTypes, new Object[] { Class.class }))
+					|| Boolean.logicalAnd(Objects.equals(name, "getPointerArray"),
+							Arrays.equals(parameterTypes, new Object[] { Pointer.class, Long.TYPE, Integer.TYPE }))
 					|| Boolean.logicalAnd(Objects.equals(name, "IsWindows10OrGreater"), Objects
 							.equals(getName(getClass(FileSystems.getDefault())), "sun.nio.fs.WindowsFileSystem"))) {
 				//

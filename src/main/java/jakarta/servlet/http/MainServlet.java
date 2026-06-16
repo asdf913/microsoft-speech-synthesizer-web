@@ -240,7 +240,7 @@ public class MainServlet extends HttpServlet {
 					//
 					final int length = lengthIbr.getValue();
 					//
-					final Pointer[] pointers = pointer != null ? pointer.getPointerArray(0, length) : null;
+					final Pointer[] pointers = getPointerArray(pointer, 0, length);
 					//
 					List<String> list = null;
 					//
@@ -280,7 +280,7 @@ public class MainServlet extends HttpServlet {
 				//
 				final int length = lengthIbr.getValue();
 				//
-				final Pointer[] pointers = pointer != null ? pointer.getPointerArray(0, length) : null;
+				final Pointer[] pointers = getPointerArray(pointer, 0, length);
 				//
 				List<String> list = null;
 				//
@@ -331,6 +331,10 @@ public class MainServlet extends HttpServlet {
 			//
 		write(request, response, jna);
 		//
+	}
+
+	private static Pointer[] getPointerArray(final Pointer instance, final long offset, final int arraySize) {
+		return instance != null ? instance.getPointerArray(offset, arraySize) : null;
 	}
 
 	private static String getWideString(final Pointer instance, final long offset) {
