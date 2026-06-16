@@ -92,6 +92,10 @@ public class MainServlet extends HttpServlet {
 
 		String getDllPath();
 
+		static Pointer getVoiceIds(final Jna instance, final IntByReference length) {
+			return instance != null ? instance.getVoiceIds(length) : null;
+		}
+
 		static String getVoiceAttribute(final Jna instance, final String voiceId, final String attribute) {
 			return instance != null ? instance.getVoiceAttribute(voiceId, attribute) : null;
 		}
@@ -236,7 +240,7 @@ public class MainServlet extends HttpServlet {
 					//
 					final IntByReference lengthIbr = new IntByReference();
 					//
-					final Pointer pointer = jna != null ? jna.getVoiceIds(lengthIbr) : null;
+					final Pointer pointer = Jna.getVoiceIds(jna, lengthIbr);
 					//
 					final int length = lengthIbr.getValue();
 					//
@@ -276,7 +280,7 @@ public class MainServlet extends HttpServlet {
 				//
 				final IntByReference lengthIbr = new IntByReference();
 				//
-				final Pointer pointer = jna != null ? jna.getVoiceIds(lengthIbr) : null;
+				final Pointer pointer = Jna.getVoiceIds(jna, lengthIbr);
 				//
 				final int length = lengthIbr.getValue();
 				//
