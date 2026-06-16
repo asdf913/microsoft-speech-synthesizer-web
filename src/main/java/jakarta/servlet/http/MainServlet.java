@@ -240,28 +240,7 @@ public class MainServlet extends HttpServlet {
 				//
 				final Map<Object, Object> map = new LinkedHashMap<>(Collections.singletonMap("voiceIds", voiceIds));
 				//
-				Table<String, String, Object> table = null;
-				//
-				String voiceId = null;
-				//
-				Map<String, Object> temp = null;
-				//
-				for (int i = 0; i < IterableUtils.size(voiceIds); i++) {
-					//
-					if ((temp = getAttributeMap(voiceId = IterableUtils.get(voiceIds, i))) != null) {
-						//
-						for (final Entry<String, Object> entry : temp.entrySet()) {
-							//
-							put(table = ObjectUtils.getIfNull(table, HashBasedTable::create), voiceId, getKey(entry),
-									getValue(entry));
-							//
-						} // for
-							//
-					} // if
-						//
-				} // for
-					//
-				final Map<String, Map<String, Object>> rowMap = rowMap(table);
+				final Map<String, Map<String, Object>> rowMap = rowMap(getAttributeTable(voiceIds));
 				//
 				map.put("voiceAttributes", rowMap);
 				//
@@ -315,6 +294,33 @@ public class MainServlet extends HttpServlet {
 		} // if
 			//
 		write(request, response, jna);
+		//
+	}
+
+	private static Table<String, String, Object> getAttributeTable(final Iterable<String> voiceIds) {
+		//
+		Table<String, String, Object> table = null;
+		//
+		String voiceId = null;
+		//
+		Map<String, Object> temp = null;
+		//
+		for (int i = 0; i < IterableUtils.size(voiceIds); i++) {
+			//
+			if ((temp = getAttributeMap(voiceId = IterableUtils.get(voiceIds, i))) != null) {
+				//
+				for (final Entry<String, Object> entry : temp.entrySet()) {
+					//
+					put(table = ObjectUtils.getIfNull(table, HashBasedTable::create), voiceId, getKey(entry),
+							getValue(entry));
+					//
+				} // for
+					//
+			} // if
+				//
+		} // for
+			//
+		return table;
 		//
 	}
 
