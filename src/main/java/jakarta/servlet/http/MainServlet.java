@@ -234,21 +234,17 @@ public class MainServlet extends HttpServlet {
 				//
 				final Template template = configuration.getTemplate("");
 				//
-				try {
+				if (template != null && writer != null) {
 					//
-					if (template != null && writer != null) {
-						//
-						template.process(Collections.singletonMap("voiceIds", getVoiceIds(jna)), writer);
-						//
-					} // if
-						//
-				} catch (final TemplateException | IOException e) {
+					template.process(Collections.singletonMap("voiceIds", getVoiceIds(jna)), writer);
 					//
-					throw new ServletException(e);
-					//
-				} // try
+				} // if
 					//
 				return;
+				//
+			} catch (final TemplateException | IOException e) {
+				//
+				throw new ServletException(e);
 				//
 			} // try
 				//
