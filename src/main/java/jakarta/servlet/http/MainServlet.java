@@ -246,18 +246,13 @@ public class MainServlet extends HttpServlet {
 					//
 					Table<String, String, Object> table = null;
 					//
-					final HKEY hkey = WinReg.HKEY_LOCAL_MACHINE;
-					//
-					String voiceId, key = null;
+					String voiceId = null;
 					//
 					Map<String, Object> temp = null;
 					//
 					for (int i = 0; i < IterableUtils.size(voiceIds); i++) {
 						//
-						if (testAndTest(isWindows, Advapi32Util::registryKeyExists, hkey,
-								key = String.join("\\", "SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens",
-										voiceId = IterableUtils.get(voiceIds, i), "Attributes"))
-								&& (temp = Advapi32Util.registryGetValues(hkey, key)) != null) {
+						if ((temp = getAttributeMap(voiceId = IterableUtils.get(voiceIds, i))) != null) {
 							//
 							for (final Entry<String, Object> entry : temp.entrySet()) {
 								//
@@ -319,17 +314,8 @@ public class MainServlet extends HttpServlet {
 				//
 				setContentType(response, APPLICATION_JSON);
 				//
-				final HKEY hkey = WinReg.HKEY_LOCAL_MACHINE;
+				write(os, new ObjectMapper().writeValueAsBytes(getAttributeMap(getParameter(request, "id"))));
 				//
-				final String key = String.join("\\", "SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens",
-						getParameter(request, "id"), "Attributes");
-				//
-				if (testAndTest(isWindows, Advapi32Util::registryKeyExists, hkey, key)) {
-					//
-					write(os, new ObjectMapper().writeValueAsBytes(Advapi32Util.registryGetValues(hkey, key)));
-					//
-				} // if
-					//
 			} // try
 				//
 			return;
@@ -337,6 +323,29 @@ public class MainServlet extends HttpServlet {
 		} // if
 			//
 		write(request, response, jna);
+		//
+	}
+
+	private static Map<String, Object> getAttributeMap(final String id) {
+		//
+		final HKEY hkey = WinReg.HKEY_LOCAL_MACHINE;
+		//
+		final Field value = testAndApply(x -> IterableUtils.size(x) == 1,
+				collect(filter(stream(testAndApply(Objects::nonNull, getClass(id), FieldUtils::getAllFieldsList, null)),
+						f -> Objects.equals(getName(f), VALUE)), Collectors.toList()),
+				x -> IterableUtils.get(x, 0), null);
+		//
+		final String key = String.join("\\", "SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens",
+				value == null || Narcissus.getField(id, value) != null ? id : null, "Attributes");
+		//
+		if (testAndTest(Objects.equals(getName(getClass(FileSystems.getDefault())), "sun.nio.fs.WindowsFileSystem"),
+				Advapi32Util::registryKeyExists, hkey, key)) {
+			//
+			return Advapi32Util.registryGetValues(hkey, key);
+			//
+		} // if
+			//
+		return null;
 		//
 	}
 
