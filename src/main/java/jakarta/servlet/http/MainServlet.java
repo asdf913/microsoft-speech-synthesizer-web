@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
@@ -278,8 +279,9 @@ public class MainServlet extends HttpServlet {
 					//
 					map.put("voiceAttributes", rowMap);
 					//
-					map.put("attributes", collect(stream(rowMap != null ? rowMap.values() : null)
-							.flatMap(x -> stream(x != null ? x.keySet() : null)), Collectors.toSet()));
+					map.put("attributes",
+							collect(stream(rowMap != null ? rowMap.values() : null).flatMap(x -> stream(keySet(x))),
+									Collectors.toSet()));
 					//
 					template.process(map, writer);
 					//
@@ -340,6 +342,10 @@ public class MainServlet extends HttpServlet {
 			//
 		write(request, response, jna);
 		//
+	}
+
+	private static <K> Set<K> keySet(final Map<K, ?> instance) {
+		return instance != null ? instance.keySet() : null;
 	}
 
 	private static List<String> getVoiceIds(final Jna jna) {
