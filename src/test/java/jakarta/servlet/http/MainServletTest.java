@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.BiPredicate;
 import java.util.function.BooleanSupplier;
@@ -229,6 +230,10 @@ class MainServletTest {
 				return getAsBoolean;
 				//
 			} else if (proxy instanceof Table && Objects.equals(name, "rowMap")) {
+				//
+				return null;
+				//
+			} else if (proxy instanceof Entry && contains(Arrays.asList("getValue", "getKey"), name)) {
 				//
 				return null;
 				//

@@ -261,15 +261,10 @@ public class MainServlet extends HttpServlet {
 							//
 							for (final Entry<String, Object> entry : temp.entrySet()) {
 								//
-								if (entry == null) {
-									//
-									continue;
-									//
-								} // if
-									//
-								table.put(voiceId, entry.getKey(), entry.getValue());
+								table.put(voiceId, getKey(entry), getValue(entry));
 								//
 							} // for
+								//
 						} // if
 							//
 					} // for
@@ -340,6 +335,14 @@ public class MainServlet extends HttpServlet {
 			//
 		write(request, response, jna);
 		//
+	}
+
+	private static <K> K getKey(final Entry<K, ?> instance) {
+		return instance != null ? instance.getKey() : null;
+	}
+
+	private static <V> V getValue(final Entry<?, V> instance) {
+		return instance != null ? instance.getValue() : null;
 	}
 
 	private static <R, C, V> Map<R, Map<C, V>> rowMap(final Table<R, C, V> instance) {
