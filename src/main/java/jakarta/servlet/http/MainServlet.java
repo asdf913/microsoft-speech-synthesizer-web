@@ -254,10 +254,9 @@ public class MainServlet extends HttpServlet {
 					//
 					for (int i = 0; i < IterableUtils.size(voiceIds) && table != null; i++) {
 						//
-						key = String.join("\\", "SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens",
-								voiceId = IterableUtils.get(voiceIds, i), "Attributes");
-						//
-						if (testAndTest(isWindows, Advapi32Util::registryKeyExists, hkey, key)
+						if (testAndTest(isWindows, Advapi32Util::registryKeyExists, hkey,
+								key = String.join("\\", "SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens",
+										voiceId = IterableUtils.get(voiceIds, i), "Attributes"))
 								&& (temp = Advapi32Util.registryGetValues(hkey, key)) != null) {
 							//
 							for (final Entry<String, Object> entry : temp.entrySet()) {
