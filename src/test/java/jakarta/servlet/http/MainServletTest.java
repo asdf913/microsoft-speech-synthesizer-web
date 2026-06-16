@@ -186,7 +186,7 @@ class MainServletTest {
 					//
 			} else if (proxy instanceof Stream) {
 				//
-				if (contains(Arrays.asList("collect", "filter", "toList"), name)) {
+				if (contains(Arrays.asList("collect", "filter", "toList", "flatMap"), name)) {
 					//
 					return null;
 					//

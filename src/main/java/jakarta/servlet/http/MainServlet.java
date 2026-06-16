@@ -269,10 +269,8 @@ public class MainServlet extends HttpServlet {
 					//
 					map.put("voiceAttributes", rowMap);
 					//
-					final Stream<Map<String, Object>> stream = stream(values(rowMap));
-					//
-					map.put("attributes", collect(stream != null ? stream.flatMap(x -> stream(keySet(x))) : null,
-							Collectors.toSet()));
+					map.put("attributes",
+							collect(flatMap(stream(values(rowMap)), x -> stream(keySet(x))), Collectors.toSet()));
 					//
 					template.process(map, writer);
 					//
@@ -324,6 +322,11 @@ public class MainServlet extends HttpServlet {
 			//
 		write(request, response, jna);
 		//
+	}
+
+	private static <T, R> Stream<R> flatMap(final Stream<T> instance,
+			final Function<? super T, ? extends Stream<? extends R>> mapper) {
+		return instance != null ? instance.flatMap(mapper) : null;
 	}
 
 	private static Map<String, Object> getAttributeMap(final String id) {
