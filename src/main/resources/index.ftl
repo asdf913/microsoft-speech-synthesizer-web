@@ -32,5 +32,31 @@
 				</tbody>
 			</table>
 		</form>
+		<table border="1">
+			<thead>
+				<tr>
+					<th>&nbsp;</th>
+					<#if attributes?? && attributes?is_sequence>
+						<#list attributes as attribute>
+							<th>${attribute}</th>
+						</#list>
+					</#if>
+				</tr>
+			</thead>
+			<tbody>				
+				<#if voiceAttributes?? && voiceAttributes?is_hash_ex>
+					<#list voiceAttributes as key,value>
+						<tr>
+							<td>${key}</td>
+							<#if attributes?? && attributes?is_sequence>
+								<#list attributes as attribute>
+									<td>${value[attribute]!""}</td>
+								</#list>
+							</#if>
+						</tr>
+					</#list>
+				</#if>
+			</tbody>
+		</table>	
 	</body>
 </html>

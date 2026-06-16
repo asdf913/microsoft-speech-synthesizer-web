@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.BiPredicate;
 import java.util.function.BooleanSupplier;
@@ -45,6 +46,8 @@ import org.javatuples.Unit;
 import org.javatuples.valueintf.IValue0;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
 import com.google.common.reflect.Reflection;
 import com.j256.simplemagic.ContentInfo;
 import com.j256.simplemagic.ContentInfoUtil;
@@ -236,7 +239,49 @@ public class MainServlet extends HttpServlet {
 				//
 				if (template != null && writer != null) {
 					//
-					template.process(Collections.singletonMap("voiceIds", getVoiceIds(jna)), writer);
+					final Iterable<String> voiceIds = getVoiceIds(jna);
+					//
+					final Map<Object, Object> map = new LinkedHashMap<>(Collections.singletonMap("voiceIds", voiceIds));
+					//
+					final Table<String, String, Object> table = HashBasedTable.create();
+					//
+					final HKEY hkey = WinReg.HKEY_LOCAL_MACHINE;
+					//
+					String voiceId, key = null;
+					//
+					Map<String, Object> temp = null;
+					//
+					for (int i = 0; i < IterableUtils.size(voiceIds) && table != null; i++) {
+						//
+						key = String.join("\\", "SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens",
+								voiceId = IterableUtils.get(voiceIds, i), "Attributes");
+						//
+						if (testAndTest(isWindows, Advapi32Util::registryKeyExists, hkey, key)
+								&& (temp = Advapi32Util.registryGetValues(hkey, key)) != null) {
+							//
+							for (final Entry<String, Object> entry : temp.entrySet()) {
+								//
+								if (entry == null) {
+									//
+									continue;
+									//
+								} // if
+									//
+								table.put(voiceId, entry.getKey(), entry.getValue());
+								//
+							} // for
+						} // if
+							//
+					} // for
+						//
+					final Map<String, Map<String, Object>> rowMap = table != null ? table.rowMap() : null;
+					//
+					map.put("voiceAttributes", rowMap);
+					//
+					map.put("attributes", collect(stream(rowMap != null ? rowMap.values() : null)
+							.flatMap(x -> stream(x != null ? x.keySet() : null)), Collectors.toSet()));
+					//
+					template.process(map, writer);
 					//
 				} // if
 					//
