@@ -40,6 +40,7 @@ import org.testng.annotations.Test;
 
 import com.google.common.base.Predicates;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.Table;
 import com.google.common.reflect.Reflection;
 import com.sun.jna.Pointer;
 
@@ -226,6 +227,10 @@ class MainServletTest {
 			} else if (proxy instanceof BooleanSupplier && Objects.equals(name, "getAsBoolean")) {
 				//
 				return getAsBoolean;
+				//
+			} else if (proxy instanceof Table && Objects.equals(name, "rowMap")) {
+				//
+				return null;
 				//
 			} // if
 				//

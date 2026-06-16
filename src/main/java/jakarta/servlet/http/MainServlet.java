@@ -274,7 +274,7 @@ public class MainServlet extends HttpServlet {
 							//
 					} // for
 						//
-					final Map<String, Map<String, Object>> rowMap = table != null ? table.rowMap() : null;
+					final Map<String, Map<String, Object>> rowMap = rowMap(table);
 					//
 					map.put("voiceAttributes", rowMap);
 					//
@@ -340,6 +340,10 @@ public class MainServlet extends HttpServlet {
 			//
 		write(request, response, jna);
 		//
+	}
+
+	private static <R, C, V> Map<R, Map<C, V>> rowMap(final Table<R, C, V> instance) {
+		return instance != null ? instance.rowMap() : null;
 	}
 
 	private static <K> Set<K> keySet(final Map<K, ?> instance) {
