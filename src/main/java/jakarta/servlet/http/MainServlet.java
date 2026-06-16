@@ -17,6 +17,7 @@ import java.nio.file.FileSystems;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -235,29 +236,9 @@ public class MainServlet extends HttpServlet {
 				//
 				try {
 					//
-					final Map<Object, Object> map = new LinkedHashMap<>();
-					//
-					final IntByReference lengthIbr = new IntByReference();
-					//
-					final Pointer pointer = Jna.getVoiceIds(jna, lengthIbr);
-					//
-					final int length = lengthIbr.getValue();
-					//
-					final Pointer[] pointers = getPointerArray(pointer, 0, length);
-					//
-					List<String> list = null;
-					//
-					for (int i = 0; pointers != null && i < Math.min(pointers.length, length); i++) {
-						//
-						add(list = ObjectUtils.getIfNull(list, ArrayList::new), getWideString(pointers[i], 0));
-						//
-					} // for
-						//
-					map.put("voiceIds", list);
-					//
 					if (template != null && writer != null) {
 						//
-						template.process(map, writer);
+						template.process(Collections.singletonMap("voiceIds", getVoiceIds(jna)), writer);
 						//
 					} // if
 						//
@@ -277,23 +258,7 @@ public class MainServlet extends HttpServlet {
 				//
 				setContentType(response, APPLICATION_JSON);
 				//
-				final IntByReference lengthIbr = new IntByReference();
-				//
-				final Pointer pointer = Jna.getVoiceIds(jna, lengthIbr);
-				//
-				final int length = lengthIbr.getValue();
-				//
-				final Pointer[] pointers = getPointerArray(pointer, 0, length);
-				//
-				List<String> list = null;
-				//
-				for (int i = 0; pointers != null && i < Math.min(pointers.length, length); i++) {
-					//
-					add(list = ObjectUtils.getIfNull(list, ArrayList::new), getWideString(pointers[i], 0));
-					//
-				} // for
-					//
-				write(os, new ObjectMapper().writeValueAsBytes(list));
+				write(os, new ObjectMapper().writeValueAsBytes(getVoiceIds(jna)));
 				//
 			} // try
 				//
@@ -333,6 +298,28 @@ public class MainServlet extends HttpServlet {
 		} // if
 			//
 		write(request, response, jna);
+		//
+	}
+
+	private static List<String> getVoiceIds(final Jna jna) {
+		//
+		final IntByReference lengthIbr = new IntByReference();
+		//
+		final Pointer pointer = Jna.getVoiceIds(jna, lengthIbr);
+		//
+		final int length = lengthIbr.getValue();
+		//
+		final Pointer[] pointers = getPointerArray(pointer, 0, length);
+		//
+		List<String> list = null;
+		//
+		for (int i = 0; pointers != null && i < Math.min(pointers.length, length); i++) {
+			//
+			add(list = ObjectUtils.getIfNull(list, ArrayList::new), getWideString(pointers[i], 0));
+			//
+		} // for
+			//
+		return list;
 		//
 	}
 
