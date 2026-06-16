@@ -236,46 +236,40 @@ public class MainServlet extends HttpServlet {
 				//
 				configuration.setTemplateLoader(batl);
 				//
-				final Template template = configuration.getTemplate("");
+				final Iterable<String> voiceIds = getVoiceIds(jna);
 				//
-				if (template != null && writer != null) {
+				final Map<Object, Object> map = new LinkedHashMap<>(Collections.singletonMap("voiceIds", voiceIds));
+				//
+				Table<String, String, Object> table = null;
+				//
+				String voiceId = null;
+				//
+				Map<String, Object> temp = null;
+				//
+				for (int i = 0; i < IterableUtils.size(voiceIds); i++) {
 					//
-					final Iterable<String> voiceIds = getVoiceIds(jna);
-					//
-					final Map<Object, Object> map = new LinkedHashMap<>(Collections.singletonMap("voiceIds", voiceIds));
-					//
-					Table<String, String, Object> table = null;
-					//
-					String voiceId = null;
-					//
-					Map<String, Object> temp = null;
-					//
-					for (int i = 0; i < IterableUtils.size(voiceIds); i++) {
+					if ((temp = getAttributeMap(voiceId = IterableUtils.get(voiceIds, i))) != null) {
 						//
-						if ((temp = getAttributeMap(voiceId = IterableUtils.get(voiceIds, i))) != null) {
+						for (final Entry<String, Object> entry : temp.entrySet()) {
 							//
-							for (final Entry<String, Object> entry : temp.entrySet()) {
-								//
-								put(table = ObjectUtils.getIfNull(table, HashBasedTable::create), voiceId,
-										getKey(entry), getValue(entry));
-								//
-							} // for
-								//
-						} // if
+							put(table = ObjectUtils.getIfNull(table, HashBasedTable::create), voiceId, getKey(entry),
+									getValue(entry));
 							//
-					} // for
+						} // for
+							//
+					} // if
 						//
-					final Map<String, Map<String, Object>> rowMap = rowMap(table);
+				} // for
 					//
-					map.put("voiceAttributes", rowMap);
-					//
-					map.put("attributes",
-							collect(flatMap(stream(values(rowMap)), x -> stream(keySet(x))), Collectors.toSet()));
-					//
-					template.process(map, writer);
-					//
-				} // if
-					//
+				final Map<String, Map<String, Object>> rowMap = rowMap(table);
+				//
+				map.put("voiceAttributes", rowMap);
+				//
+				map.put("attributes",
+						collect(flatMap(stream(values(rowMap)), x -> stream(keySet(x))), Collectors.toSet()));
+				//
+				process(configuration.getTemplate(""), map, writer);
+				//
 				return;
 				//
 			} catch (final TemplateException | IOException e) {
@@ -322,6 +316,28 @@ public class MainServlet extends HttpServlet {
 			//
 		write(request, response, jna);
 		//
+	}
+
+	private static void process(final Template instance, final Object dataModel, final Writer out)
+			throws TemplateException, IOException {
+		//
+		if (instance == null) {
+			//
+			return;
+			//
+		} // if
+			//
+		final Field parent = testAndApply(x -> IterableUtils.size(x) == 1,
+				collect(filter(stream(FieldUtils.getAllFieldsList(getClass(instance))),
+						f -> Objects.equals(getName(f), "parent")), Collectors.toList()),
+				x -> IterableUtils.get(x, 0), null);
+		//
+		if ((parent == null || Narcissus.getField(instance, parent) != null) && out != null) {
+			//
+			instance.process(dataModel, out);
+			//
+		} // if
+			//
 	}
 
 	private static <T, R> Stream<R> flatMap(final Stream<T> instance,
