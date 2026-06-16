@@ -229,7 +229,7 @@ class MainServletTest {
 				//
 				return getAsBoolean;
 				//
-			} else if (proxy instanceof Table && Objects.equals(name, "rowMap")) {
+			} else if (proxy instanceof Table && contains(Arrays.asList("rowMap", "put"), name)) {
 				//
 				return null;
 				//

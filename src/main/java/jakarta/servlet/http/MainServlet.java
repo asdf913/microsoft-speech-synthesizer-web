@@ -244,7 +244,7 @@ public class MainServlet extends HttpServlet {
 					//
 					final Map<Object, Object> map = new LinkedHashMap<>(Collections.singletonMap("voiceIds", voiceIds));
 					//
-					final Table<String, String, Object> table = HashBasedTable.create();
+					Table<String, String, Object> table = null;
 					//
 					final HKEY hkey = WinReg.HKEY_LOCAL_MACHINE;
 					//
@@ -252,7 +252,7 @@ public class MainServlet extends HttpServlet {
 					//
 					Map<String, Object> temp = null;
 					//
-					for (int i = 0; i < IterableUtils.size(voiceIds) && table != null; i++) {
+					for (int i = 0; i < IterableUtils.size(voiceIds); i++) {
 						//
 						if (testAndTest(isWindows, Advapi32Util::registryKeyExists, hkey,
 								key = String.join("\\", "SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens",
@@ -261,7 +261,8 @@ public class MainServlet extends HttpServlet {
 							//
 							for (final Entry<String, Object> entry : temp.entrySet()) {
 								//
-								table.put(voiceId, getKey(entry), getValue(entry));
+								put(table = ObjectUtils.getIfNull(table, HashBasedTable::create), voiceId,
+										getKey(entry), getValue(entry));
 								//
 							} // for
 								//
@@ -273,8 +274,10 @@ public class MainServlet extends HttpServlet {
 					//
 					map.put("voiceAttributes", rowMap);
 					//
-					map.put("attributes",
-							collect(stream(values(rowMap)).flatMap(x -> stream(keySet(x))), Collectors.toSet()));
+					final Stream<Map<String, Object>> stream = stream(values(rowMap));
+					//
+					map.put("attributes", collect(stream != null ? stream.flatMap(x -> stream(keySet(x))) : null,
+							Collectors.toSet()));
 					//
 					template.process(map, writer);
 					//
@@ -335,6 +338,12 @@ public class MainServlet extends HttpServlet {
 			//
 		write(request, response, jna);
 		//
+	}
+
+	private static <R, C, V> void put(final Table<R, C, V> instance, final R rowKey, final C columnKey, final V value) {
+		if (instance != null) {
+			instance.put(rowKey, columnKey, value);
+		}
 	}
 
 	private static <K> K getKey(final Entry<K, ?> instance) {
