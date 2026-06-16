@@ -220,9 +220,7 @@ public class MainServlet extends HttpServlet {
 			//
 		if (Objects.equals(servletPath, "/")) {
 			//
-			final Class<?> clz = getClass();
-			//
-			try (final InputStream is = clz != null ? clz.getResourceAsStream("/index.ftl") : null;
+			try (final InputStream is = getResourceAsStream(getClass(), "/index.ftl");
 					final Writer writer = getWriter(response)) {
 				//
 				final Configuration configuration = new Configuration(Configuration.VERSION_2_3_34);
@@ -335,6 +333,24 @@ public class MainServlet extends HttpServlet {
 		} // if
 			//
 		write(request, response, jna);
+		//
+	}
+
+	private static InputStream getResourceAsStream(final Class<?> instnace, final String resource) {
+		//
+		if (instnace == null) {
+			//
+			return null;
+			//
+		} // if
+			//
+		final Field value = testAndApply(x -> IterableUtils.size(x) == 1,
+				collect(filter(stream(FieldUtils.getAllFieldsList(getClass(resource))),
+						f -> Objects.equals(getName(f), VALUE)), Collectors.toList()),
+				x -> IterableUtils.get(x, 0), null);
+		//
+		return value == null || Narcissus.getField(resource, value) != null ? instnace.getResourceAsStream(resource)
+				: null;
 		//
 	}
 
