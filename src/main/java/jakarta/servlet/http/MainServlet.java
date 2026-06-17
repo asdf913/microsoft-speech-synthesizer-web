@@ -135,6 +135,12 @@ public class MainServlet extends HttpServlet {
 			return instance != null ? instance.getInt(key) : defaultValue;
 		}
 
+		static void setInt(final IntMap instance, final String key, final int value) {
+			if (instance != null) {
+				instance.setInt(key, value);
+			}
+		}
+
 	}
 
 	private static class IH implements InvocationHandler {
@@ -605,18 +611,14 @@ public class MainServlet extends HttpServlet {
 					//
 					final IntMap intMap = Reflection.newProxy(IntMap.class, ih);
 					//
-					if (intMap != null) {
-						//
-						intMap.setInt("textLength", length(ints1));
-						//
-						intMap.setInt("rate", NumberUtils.toInt(getParameter(request, "rate"), 0));
-						//
-						intMap.setInt(VOLUME, NumberUtils.toInt(getParameter(request, VOLUME), 100));
-						//
-						intMap.setInt("fileNameLength", length(ints2));
-						//
-					} // if
-						//
+					IntMap.setInt(intMap, "textLength", length(ints1));
+					//
+					IntMap.setInt(intMap, "rate", NumberUtils.toInt(getParameter(request, "rate"), 0));
+					//
+					IntMap.setInt(intMap, VOLUME, NumberUtils.toInt(getParameter(request, VOLUME), 100));
+					//
+					IntMap.setInt(intMap, "fileNameLength", length(ints2));
+					//
 					if (!isTestMode()) {
 						//
 						final String voiceId = getParameter(request, "voiceId");
