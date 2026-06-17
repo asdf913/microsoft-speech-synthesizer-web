@@ -2,8 +2,13 @@
 	<head>
 		<script type="text/javascript">
 			function submitWav(){
-				document.forms[0].action="/"+document.querySelectorAll("input[type='text']")[0].value+".wav";
-				document.forms[0].submit();
+				var form=typeof document==="object"&&document!==null&&typeof document.forms==="object"&&document.forms!=null&&typeof document.forms.length==="number"&&document.forms.length>0?document.forms[0]:null;
+				if(form!=null&&typeof form.action==="string"&&typeof document==="object"&&document!==null){
+					var els=typeof document.querySelectorAll==="function"?document.querySelectorAll("input[type='text']"):null;
+					var el=els!==null&&typeof els.length==="number"&&els.length>0?els[0]:null;
+					form.action="/"+(el!==null&&typeof el.value==="string"?el.value:null)+".wav";
+					if(typeof form.submit==="function"){form.submit();}
+				}
 			}
 		</script>
 	</head>
