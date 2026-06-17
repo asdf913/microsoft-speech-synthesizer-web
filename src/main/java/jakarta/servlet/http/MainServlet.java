@@ -249,20 +249,15 @@ public class MainServlet extends HttpServlet {
 							y -> y != null && y.getLcid() == Integer.parseInt(Objects.toString(get(m, "Language")), 16))
 							.toList();
 					//
-					final int size = IterableUtils.size(temp);
-					//
-					testAndRun(size > 1, () -> {
+					testAndRun(IterableUtils.size(temp) > 1, () -> {
 						//
 						throw new IllegalStateException();
 						//
 					});
 					//
-					if (size == 1) {
-						//
-						put(m, "LocaleID", IterableUtils.get(temp, 0));
-						//
-					} // if
-						//
+					testAndAccept(x -> IterableUtils.size(x) == 1, temp,
+							x -> put(m, "LocaleID", IterableUtils.get(x, 0)));
+					//
 				});
 				//
 				process(configuration.getTemplate(""), map, writer);
