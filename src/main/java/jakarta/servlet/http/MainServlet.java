@@ -629,7 +629,7 @@ public class MainServlet extends HttpServlet {
 							//
 							final Collection<Integer> lcids = toList(map(
 									filter(Arrays.stream(LocaleID.values()),
-											x -> x != null && contains(Strings.CI, x.getDescription(), "Japanese")),
+											x -> contains(Strings.CI, getDescription(x), "Japanese")),
 									x -> x != null ? Integer.valueOf(x.getLcid()) : null));
 							//
 							testAndAccept(x -> IterableUtils.size(x) == 1, toList(map(filter(
@@ -661,6 +661,10 @@ public class MainServlet extends HttpServlet {
 				//
 		} // if
 			//
+	}
+
+	private static String getDescription(final LocaleID instance) {
+		return instance != null ? instance.getDescription() : null;
 	}
 
 	private static <T, R> Stream<R> map(final Stream<T> instance, final Function<? super T, ? extends R> mapper) {
