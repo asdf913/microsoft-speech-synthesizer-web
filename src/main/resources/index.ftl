@@ -16,6 +16,7 @@
 						<td>
 							<select name="voiceId">
 								<#if voiceIds?? && voiceIds?is_sequence>
+									<option></option>
 									<#list voiceIds as voiceId>
 									    <option value="${voiceId}">${voiceId}</option>
 									</#list>
