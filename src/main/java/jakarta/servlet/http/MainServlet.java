@@ -26,6 +26,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -43,6 +44,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.function.FailableConsumer;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.apache.poi.util.LocaleID;
 import org.javatuples.Unit;
 import org.javatuples.valueintf.IValue0;
 
@@ -247,6 +249,34 @@ public class MainServlet extends HttpServlet {
 				map.put("attributes",
 						collect(flatMap(stream(values(rowMap)), x -> stream(keySet(x))), Collectors.toSet()));
 				//
+				final LocaleID[] localeIds = LocaleID.values();
+				//
+				forEach(values(rowMap), m -> {
+					//
+					if (m == null || !m.containsKey("Language")) {
+						//
+						return;
+						//
+					} // if
+						//
+					final Iterable<LocaleID> temp = filter(Arrays.stream(localeIds),
+							y -> y != null && y.getLcid() == Integer.parseInt(Objects.toString(m.get("Language")), 16))
+							.toList();
+					//
+					final int size = IterableUtils.size(temp);
+					//
+					if (size > 1) {
+						//
+						throw new IllegalStateException();
+						//
+					} else if (size == 1) {
+						//
+						m.put("LocaleID", IterableUtils.get(temp, 0));
+						//
+					} // if
+						//
+				});
+				//
 				process(configuration.getTemplate(""), map, writer);
 				//
 				return;
@@ -295,6 +325,16 @@ public class MainServlet extends HttpServlet {
 			//
 		write(request, response, jna);
 		//
+	}
+
+	private static <T> void forEach(final Iterable<T> instance, final Consumer<? super T> action) {
+		//
+		if (instance != null) {
+			//
+			instance.forEach(action);
+			//
+		} // if
+			//
 	}
 
 	private static Table<String, String, Object> getAttributeTable(final Iterable<String> voiceIds) {

@@ -44,12 +44,12 @@
 					<th>&nbsp;</th>
 					<#if attributes?? && attributes?is_sequence>
 						<#list attributes as attribute>
-							<th>${attribute}</th>
+							<th <#if attribute="Language">colspan="2"</#if>>${attribute}</th>
 						</#list>
 					</#if>
 				</tr>
 			</thead>
-			<tbody>				
+			<tbody style="white-space:nowrap">
 				<#if voiceAttributes?? && voiceAttributes?is_hash_ex>
 					<#list voiceAttributes as key,value>
 						<tr>
@@ -57,6 +57,8 @@
 							<#if attributes?? && attributes?is_sequence>
 								<#list attributes as attribute>
 									<td>${value[attribute]!""}</td>
+									<#if attribute="Language"><td>
+									<#if value["LocaleID"]??&&value["LocaleID"].description?is_string>${value["LocaleID"].description!""}</#if></td></#if>
 								</#list>
 							</#if>
 						</tr>
