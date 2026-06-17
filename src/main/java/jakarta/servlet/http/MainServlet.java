@@ -605,45 +605,42 @@ public class MainServlet extends HttpServlet {
 				final int[] ints2 = toIntArray(getAbsolutePath(file = File
 						.createTempFile(RandomStringUtils.secureStrong().nextAlphabetic(3), null, new File("."))));
 				//
-				if (ints1 != null) {
+				final IH ih = new IH();
+				//
+				final IntMap intMap = Reflection.newProxy(IntMap.class, ih);
+				//
+				IntMap.setInt(intMap, "textLength", length(ints1));
+				//
+				IntMap.setInt(intMap, "rate", NumberUtils.toInt(getParameter(request, "rate"), 0));
+				//
+				IntMap.setInt(intMap, VOLUME, NumberUtils.toInt(getParameter(request, VOLUME), 100));
+				//
+				IntMap.setInt(intMap, "fileNameLength", length(ints2));
+				//
+				if (!isTestMode() && ints1 != null) {
 					//
-					final IH ih = new IH();
+					final String voiceId = getParameter(request, "voiceId");
 					//
-					final IntMap intMap = Reflection.newProxy(IntMap.class, ih);
-					//
-					IntMap.setInt(intMap, "textLength", length(ints1));
-					//
-					IntMap.setInt(intMap, "rate", NumberUtils.toInt(getParameter(request, "rate"), 0));
-					//
-					IntMap.setInt(intMap, VOLUME, NumberUtils.toInt(getParameter(request, VOLUME), 100));
-					//
-					IntMap.setInt(intMap, "fileNameLength", length(ints2));
-					//
-					if (!isTestMode()) {
+					if (StringUtils.isNotEmpty(voiceId)) {
 						//
-						final String voiceId = getParameter(request, "voiceId");
+						Jna.writeVoiceToFile(jna, intMap, ints1, voiceId, ints2);
 						//
-						if (StringUtils.isNotEmpty(voiceId)) {
-							//
-							Jna.writeVoiceToFile(jna, intMap, ints1, voiceId, ints2);
-							//
-						} else if (new MojiDetector().hasKana(text)) {
-							//
-							final Collection<Integer> lcids = toList(map(
-									filter(Arrays.stream(LocaleID.values()),
-											x -> contains(Strings.CI, getDescription(x), "Japanese")),
-									x -> x != null ? Integer.valueOf(x.getLcid()) : null));
-							//
-							testAndAccept(x -> IterableUtils.size(x) == 1, toList(map(
-									filter(stream(rowMap(getAttributeTable(getVoiceIds(jna))).entrySet()),
-											x -> and(x, y -> containsKey(getValue(y), "Language"),
-													y -> IterableUtils.contains(lcids, Integer.parseInt(
-															Objects.toString(get(getValue(y), "Language")), 16)))),
-									MainServlet::getKey)),
-									x -> Jna.writeVoiceToFile(jna, intMap, ints1, IterableUtils.get(x, 0), ints2));
-							//
-						} // if
-							//
+					} else if (new MojiDetector().hasKana(text)) {
+						//
+						final Collection<Integer> lcids = toList(map(
+								filter(Arrays.stream(LocaleID.values()),
+										x -> contains(Strings.CI, getDescription(x), "Japanese")),
+								x -> x != null ? Integer.valueOf(x.getLcid()) : null));
+						//
+						testAndAccept(x -> IterableUtils.size(x) == 1,
+								toList(map(
+										filter(stream(rowMap(getAttributeTable(getVoiceIds(jna))).entrySet()),
+												x -> and(x, y -> containsKey(getValue(y), "Language"),
+														y -> IterableUtils.contains(lcids, Integer.parseInt(
+																Objects.toString(get(getValue(y), "Language")), 16)))),
+										MainServlet::getKey)),
+								x -> Jna.writeVoiceToFile(jna, intMap, ints1, IterableUtils.get(x, 0), ints2));
+						//
 					} // if
 						//
 				} // if
