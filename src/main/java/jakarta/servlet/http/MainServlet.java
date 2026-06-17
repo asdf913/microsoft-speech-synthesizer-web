@@ -173,20 +173,6 @@ public class MainServlet extends HttpServlet {
 			//
 		}
 
-		private static <K, V> void put(final Map<K, V> instance, final K key, final V value) {
-			if (instance != null) {
-				instance.put(key, value);
-			}
-		}
-
-		private static boolean containsKey(final Map<?, ?> instance, final Object key) {
-			return instance != null && instance.containsKey(key);
-		}
-
-		private static <V> V get(final Map<?, V> instance, final Object key) {
-			return instance != null ? instance.get(key) : null;
-		}
-
 	}
 
 	@Override
@@ -244,23 +230,23 @@ public class MainServlet extends HttpServlet {
 				//
 				final Map<String, Map<String, Object>> rowMap = rowMap(getAttributeTable(voiceIds));
 				//
-				map.put("voiceAttributes", rowMap);
+				put(map, "voiceAttributes", rowMap);
 				//
-				map.put("attributes",
+				put(map, "attributes",
 						collect(flatMap(stream(values(rowMap)), x -> stream(keySet(x))), Collectors.toSet()));
 				//
 				final LocaleID[] localeIds = LocaleID.values();
 				//
 				forEach(values(rowMap), m -> {
 					//
-					if (m == null || !m.containsKey("Language")) {
+					if (!containsKey(m, "Language")) {
 						//
 						return;
 						//
 					} // if
 						//
 					final Iterable<LocaleID> temp = filter(Arrays.stream(localeIds),
-							y -> y != null && y.getLcid() == Integer.parseInt(Objects.toString(m.get("Language")), 16))
+							y -> y != null && y.getLcid() == Integer.parseInt(Objects.toString(get(m, "Language")), 16))
 							.toList();
 					//
 					final int size = IterableUtils.size(temp);
@@ -271,7 +257,7 @@ public class MainServlet extends HttpServlet {
 						//
 					} else if (size == 1) {
 						//
-						m.put("LocaleID", IterableUtils.get(temp, 0));
+						put(m, "LocaleID", IterableUtils.get(temp, 0));
 						//
 					} // if
 						//
@@ -325,6 +311,20 @@ public class MainServlet extends HttpServlet {
 			//
 		write(request, response, jna);
 		//
+	}
+
+	private static <K, V> void put(final Map<K, V> instance, final K key, final V value) {
+		if (instance != null) {
+			instance.put(key, value);
+		}
+	}
+
+	private static <V> V get(final Map<?, V> instance, final Object key) {
+		return instance != null ? instance.get(key) : null;
+	}
+
+	private static boolean containsKey(final Map<?, ?> instance, final Object key) {
+		return instance != null && instance.containsKey(key);
 	}
 
 	private static <T> void forEach(final Iterable<T> instance, final Consumer<? super T> action) {

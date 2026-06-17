@@ -416,7 +416,7 @@ class MainServletTest {
 		//
 		if (ih != null) {
 			//
-			ih.test = ih.getAsBoolean = ih.add = Boolean.TRUE;
+			ih.test = ih.getAsBoolean = ih.add = ih.containsKey = Boolean.TRUE;
 			//
 			ih.modifiers = Integer.valueOf(0);
 			//
@@ -1115,12 +1115,6 @@ class MainServletTest {
 		//
 		Object object = null;
 		//
-		if (ih != null) {
-			//
-			ih.containsKey = Boolean.FALSE;
-			//
-		} // if
-			//
 		for (int i = 0; ms != null && i < ms.length; i++) {
 			//
 			if ((m = ArrayUtils.get(ms, i)) == null || m.isSynthetic()
