@@ -32,6 +32,7 @@ import java.util.stream.Stream;
 import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.function.FailableConsumer;
 import org.javatuples.Unit;
 import org.testng.Assert;
@@ -59,7 +60,7 @@ class MainServletTest {
 	private static Method METHOD_TEST, METHOD_TO_INT_ARRAY, METHOD_COLLECT, METHOD_TEST_AND_ACCEPT, METHOD_CAST,
 			METHOD_TEST_AND_GET, METHOD_TEST_AND_TEST, METHOD_STARTS_WITH, METHOD_ENDS_WITH, METHOD_AND,
 			METHOD_GET_IVALUE0, METHOD_GET_NAME, METHOD_GET_CLASS, METHOD_IS_ASSIGNABLE_FROM, METHOD_TO_LIST,
-			METHOD_FILTER, METHOD_GET_ATTRIBUTE_TABLE, METHOD_TEST_AND_RUN = null;
+			METHOD_FILTER, METHOD_GET_ATTRIBUTE_TABLE, METHOD_TEST_AND_RUN, METHOD_CONTAINS = null;
 
 	@BeforeSuite
 	void beforeSuite() throws NoSuchMethodException, ClassNotFoundException {
@@ -108,6 +109,9 @@ class MainServletTest {
 		//
 		(METHOD_TEST_AND_RUN = clz.getDeclaredMethod("testAndRun", Boolean.TYPE, Runnable.class)).setAccessible(true);
 		//
+		(METHOD_CONTAINS = clz.getDeclaredMethod("contains", Strings.class, CharSequence.class, CharSequence.class))
+				.setAccessible(true);
+		//
 		CLASS_INT_MAP = Class.forName("jakarta.servlet.http.MainServlet$IntMap");
 		//
 	}
@@ -120,7 +124,7 @@ class MainServletTest {
 
 		private Map<Object, Object> parameters = null;
 
-		private Integer intValue, modifiers = null;
+		private Integer intValue, modifiers, length = null;
 
 		private PrintWriter printWriter = null;
 
@@ -155,6 +159,10 @@ class MainServletTest {
 			} else if (proxy instanceof Iterable && Objects.equals(name, "iterator")) {
 				//
 				return null;
+				//
+			} else if (proxy instanceof CharSequence && Objects.equals(name, "length")) {
+				//
+				return length;
 				//
 			} // if
 				//
@@ -194,7 +202,7 @@ class MainServletTest {
 					//
 			} else if (proxy instanceof Stream) {
 				//
-				if (contains(Arrays.asList("collect", "filter", "toList", "flatMap"), name)) {
+				if (contains(Arrays.asList("collect", "filter", "toList", "flatMap", "map"), name)) {
 					//
 					return null;
 					//
@@ -420,7 +428,7 @@ class MainServletTest {
 			//
 			ih.test = ih.getAsBoolean = ih.add = ih.containsKey = Boolean.TRUE;
 			//
-			ih.modifiers = Integer.valueOf(0);
+			ih.modifiers = ih.length = Integer.valueOf(0);
 			//
 		} // if
 			//
@@ -471,6 +479,10 @@ class MainServletTest {
 				} else if (Objects.equals(parameterType, Executable.class)) {
 					//
 					add(collection, Object.class.getDeclaredMethod("toString"));
+					//
+				} else if (Objects.equals(parameterType, Strings.class)) {
+					//
+					add(collection, Strings.CI);
 					//
 				} else if (parameterType != null && parameterType.isArray()) {
 					//
@@ -845,6 +857,13 @@ class MainServletTest {
 		//
 		Assert.assertNull(invoke(METHOD_TEST_AND_RUN, null, Boolean.TRUE,
 				Reflection.newProxy(Runnable.class, ObjectUtils.getIfNull(ih, IH::new))));
+		//
+	}
+
+	@Test
+	void testContains() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertEquals(invoke(METHOD_CONTAINS, null, Strings.CI, "1", "2"), Boolean.FALSE);
 		//
 	}
 

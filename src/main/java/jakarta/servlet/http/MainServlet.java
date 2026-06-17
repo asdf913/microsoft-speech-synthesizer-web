@@ -41,6 +41,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.function.FailableConsumer;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -55,6 +56,7 @@ import com.google.common.reflect.Reflection;
 import com.j256.simplemagic.ContentInfo;
 import com.j256.simplemagic.ContentInfoUtil;
 import com.j256.simplemagic.ContentType;
+import com.moji4j.MojiDetector;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.Pointer;
@@ -305,8 +307,16 @@ public class MainServlet extends HttpServlet {
 			//
 		} // if
 			//
-		write(request, response, jna);
-		//
+		try {
+			//
+			write(request, response, jna);
+			//
+		} catch (final ClassNotFoundException e) {
+			//
+			throw new ServletException(e);
+			//
+		} // try
+			//
 	}
 
 	private static boolean isWindows() {
@@ -572,7 +582,7 @@ public class MainServlet extends HttpServlet {
 	}
 
 	private static void write(final HttpServletRequest request, final HttpServletResponse response, final Jna jna)
-			throws IOException {
+			throws IOException, ClassNotFoundException {
 		//
 		final String servletPath = getServletPath(request);
 		//
@@ -582,8 +592,9 @@ public class MainServlet extends HttpServlet {
 			//
 			try (final OutputStream os = getOutputStream(response)) {
 				//
-				final int[] ints1 = toIntArray(
-						StringUtils.substring(servletPath, 1, StringUtils.length(servletPath) - 4));
+				final String text = StringUtils.substring(servletPath, 1, StringUtils.length(servletPath) - 4);
+				//
+				final int[] ints1 = toIntArray(text);
 				//
 				final int[] ints2 = toIntArray(getAbsolutePath(file = File
 						.createTempFile(RandomStringUtils.secureStrong().nextAlphabetic(3), null, new File("."))));
@@ -608,8 +619,28 @@ public class MainServlet extends HttpServlet {
 						//
 					if (!isTestMode()) {
 						//
-						Jna.writeVoiceToFile(jna, intMap, ints1, getParameter(request, "voiceId"), ints2);
+						final String voiceId = getParameter(request, "voiceId");
 						//
+						if (StringUtils.isNotEmpty(voiceId)) {
+							//
+							Jna.writeVoiceToFile(jna, intMap, ints1, voiceId, ints2);
+							//
+						} else if (new MojiDetector().hasKana(text)) {
+							//
+							final Collection<Integer> lcids = toList(map(
+									filter(Arrays.stream(LocaleID.values()),
+											x -> x != null && contains(Strings.CI, x.getDescription(), "Japanese")),
+									x -> x != null ? Integer.valueOf(x.getLcid()) : null));
+							//
+							testAndAccept(x -> IterableUtils.size(x) == 1, toList(map(filter(
+									stream(rowMap(getAttributeTable(getVoiceIds(jna))).entrySet()),
+									x -> containsKey(getValue(x), "Language") && IterableUtils.contains(lcids,
+											Integer.parseInt(Objects.toString(get(getValue(x), "Language")), 16))),
+									MainServlet::getKey)),
+									x -> Jna.writeVoiceToFile(jna, intMap, ints1, IterableUtils.get(x, 0), ints2));
+							//
+						} // if
+							//
 					} // if
 						//
 				} // if
@@ -630,6 +661,14 @@ public class MainServlet extends HttpServlet {
 				//
 		} // if
 			//
+	}
+
+	private static <T, R> Stream<R> map(final Stream<T> instance, final Function<? super T, ? extends R> mapper) {
+		return instance != null ? instance.map(mapper) : null;
+	}
+
+	private static boolean contains(final Strings instance, final CharSequence seq, final CharSequence searchSeq) {
+		return instance != null && instance.contains(seq, searchSeq);
 	}
 
 	private static IValue0<Object> getIValue0(final String servletPath, final Jna jna) {
