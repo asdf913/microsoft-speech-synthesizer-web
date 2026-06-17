@@ -183,8 +183,7 @@ public class MainServlet extends HttpServlet {
 		//
 		Jna jna = null;
 		//
-		final boolean isWindows = Objects.equals(getName(getClass(FileSystems.getDefault())),
-				"sun.nio.fs.WindowsFileSystem");
+		final boolean isWindows = isWindows();
 		//
 		try {
 			//
@@ -310,6 +309,12 @@ public class MainServlet extends HttpServlet {
 		//
 	}
 
+	private static boolean isWindows() {
+		//
+		return Objects.equals(getName(getClass(FileSystems.getDefault())), "sun.nio.fs.WindowsFileSystem");
+		//
+	}
+
 	private static void testAndRun(final boolean condition, final Runnable runnable) {
 		if (condition && runnable != null) {
 			runnable.run();
@@ -406,8 +411,7 @@ public class MainServlet extends HttpServlet {
 		final String key = String.join("\\", "SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens",
 				value == null || Narcissus.getField(id, value) != null ? id : null, "Attributes");
 		//
-		if (testAndTest(Objects.equals(getName(getClass(FileSystems.getDefault())), "sun.nio.fs.WindowsFileSystem"),
-				Advapi32Util::registryKeyExists, hkey, key)) {
+		if (testAndTest(isWindows(), Advapi32Util::registryKeyExists, hkey, key)) {
 			//
 			return Advapi32Util.registryGetValues(hkey, key);
 			//
@@ -504,7 +508,7 @@ public class MainServlet extends HttpServlet {
 		} // if
 			//
 		return cast(Boolean.class,
-				Objects.equals(getName(getClass(FileSystems.getDefault())), "sun.nio.fs.WindowsFileSystem")
+				isWindows()
 						? Narcissus.invokeStaticMethod(
 								testAndApply(x -> IterableUtils.size(x) == 1, ms, x -> IterableUtils.get(x, 0), null))
 						: null);
