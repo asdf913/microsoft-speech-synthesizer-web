@@ -85,6 +85,8 @@ public class MainServlet extends HttpServlet {
 
 	private static final String VOLUME = "volume";
 
+	private static final String LANGUAGE = "Language";
+
 	private interface Jna extends Library {
 
 		void speak(final int[] text, final int length, final String voiceId, final int rate, final int volume);
@@ -246,14 +248,14 @@ public class MainServlet extends HttpServlet {
 				//
 				forEach(values(rowMap), m -> {
 					//
-					if (!containsKey(m, "Language")) {
+					if (!containsKey(m, LANGUAGE)) {
 						//
 						return;
 						//
 					} // if
 						//
 					final Iterable<LocaleID> temp = filter(Arrays.stream(localeIds),
-							y -> y != null && y.getLcid() == Integer.parseInt(Objects.toString(get(m, "Language")), 16))
+							y -> y != null && y.getLcid() == Integer.parseInt(Objects.toString(get(m, LANGUAGE)), 16))
 							.toList();
 					//
 					testAndRun(IterableUtils.size(temp) > 1, () -> {
@@ -635,9 +637,9 @@ public class MainServlet extends HttpServlet {
 						testAndAccept(x -> IterableUtils.size(x) == 1,
 								toList(map(
 										filter(stream(rowMap(getAttributeTable(getVoiceIds(jna))).entrySet()),
-												x -> and(x, y -> containsKey(getValue(y), "Language"),
+												x -> and(x, y -> containsKey(getValue(y), LANGUAGE),
 														y -> IterableUtils.contains(lcids, Integer.parseInt(
-																Objects.toString(get(getValue(y), "Language")), 16)))),
+																Objects.toString(get(getValue(y), LANGUAGE)), 16)))),
 										MainServlet::getKey)),
 								x -> Jna.writeVoiceToFile(jna, intMap, ints1, IterableUtils.get(x, 0), ints2));
 						//
