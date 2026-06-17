@@ -59,8 +59,8 @@ class MainServletTest {
 
 	private static Method METHOD_TEST, METHOD_TO_INT_ARRAY, METHOD_COLLECT, METHOD_TEST_AND_ACCEPT, METHOD_CAST,
 			METHOD_TEST_AND_GET, METHOD_TEST_AND_TEST, METHOD_STARTS_WITH, METHOD_ENDS_WITH, METHOD_AND,
-			METHOD_GET_IVALUE0, METHOD_GET_NAME, METHOD_GET_CLASS, METHOD_IS_ASSIGNABLE_FROM, METHOD_TO_LIST,
-			METHOD_FILTER, METHOD_GET_ATTRIBUTE_TABLE, METHOD_TEST_AND_RUN, METHOD_CONTAINS = null;
+			METHOD_AND_OBJECT, METHOD_GET_IVALUE0, METHOD_GET_NAME, METHOD_GET_CLASS, METHOD_IS_ASSIGNABLE_FROM,
+			METHOD_TO_LIST, METHOD_FILTER, METHOD_GET_ATTRIBUTE_TABLE, METHOD_TEST_AND_RUN, METHOD_CONTAINS = null;
 
 	@BeforeSuite
 	void beforeSuite() throws NoSuchMethodException, ClassNotFoundException {
@@ -90,6 +90,9 @@ class MainServletTest {
 		(METHOD_ENDS_WITH = clz.getDeclaredMethod("endsWith", String.class, String.class)).setAccessible(true);
 		//
 		(METHOD_AND = clz.getDeclaredMethod("and", Boolean.TYPE, Boolean.TYPE, boolean[].class)).setAccessible(true);
+		//
+		(METHOD_AND_OBJECT = clz.getDeclaredMethod("and", Object.class, Predicate.class, Predicate.class))
+				.setAccessible(true);
 		//
 		(METHOD_GET_IVALUE0 = clz.getDeclaredMethod("getIValue0", String.class,
 				CLASS_JNA = Class.forName("jakarta.servlet.http.MainServlet$Jna"))).setAccessible(true);
@@ -825,6 +828,12 @@ class MainServletTest {
 	void testAnd() throws IllegalAccessException, InvocationTargetException {
 		//
 		Assert.assertEquals(invoke(METHOD_AND, null, Boolean.TRUE, Boolean.TRUE, null), Boolean.TRUE);
+		//
+		final Predicate<?> alwaysTrue = Predicates.alwaysTrue();
+		//
+		Assert.assertEquals(invoke(METHOD_AND_OBJECT, null, null, alwaysTrue, alwaysTrue), Boolean.TRUE);
+		//
+		Assert.assertEquals(invoke(METHOD_AND_OBJECT, null, null, alwaysTrue, Predicates.alwaysFalse()), Boolean.FALSE);
 		//
 	}
 

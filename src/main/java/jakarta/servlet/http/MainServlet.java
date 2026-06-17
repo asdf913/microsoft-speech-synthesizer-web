@@ -632,10 +632,11 @@ public class MainServlet extends HttpServlet {
 											x -> contains(Strings.CI, getDescription(x), "Japanese")),
 									x -> x != null ? Integer.valueOf(x.getLcid()) : null));
 							//
-							testAndAccept(x -> IterableUtils.size(x) == 1, toList(map(filter(
-									stream(rowMap(getAttributeTable(getVoiceIds(jna))).entrySet()),
-									x -> containsKey(getValue(x), "Language") && IterableUtils.contains(lcids,
-											Integer.parseInt(Objects.toString(get(getValue(x), "Language")), 16))),
+							testAndAccept(x -> IterableUtils.size(x) == 1, toList(map(
+									filter(stream(rowMap(getAttributeTable(getVoiceIds(jna))).entrySet()),
+											x -> and(x, y -> containsKey(getValue(y), "Language"),
+													y -> IterableUtils.contains(lcids, Integer.parseInt(
+															Objects.toString(get(getValue(y), "Language")), 16)))),
 									MainServlet::getKey)),
 									x -> Jna.writeVoiceToFile(jna, intMap, ints1, IterableUtils.get(x, 0), ints2));
 							//
@@ -661,6 +662,10 @@ public class MainServlet extends HttpServlet {
 				//
 		} // if
 			//
+	}
+
+	private static <T> boolean and(final T value, final Predicate<T> conditionA, final Predicate<T> conditionB) {
+		return test(conditionA, value) && test(conditionB, value);
 	}
 
 	private static String getDescription(final LocaleID instance) {
