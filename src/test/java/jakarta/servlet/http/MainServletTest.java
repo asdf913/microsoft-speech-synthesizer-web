@@ -59,7 +59,7 @@ class MainServletTest {
 	private static Method METHOD_TEST, METHOD_TO_INT_ARRAY, METHOD_COLLECT, METHOD_TEST_AND_ACCEPT, METHOD_CAST,
 			METHOD_TEST_AND_GET, METHOD_TEST_AND_TEST, METHOD_STARTS_WITH, METHOD_ENDS_WITH, METHOD_AND,
 			METHOD_GET_IVALUE0, METHOD_GET_NAME, METHOD_GET_CLASS, METHOD_IS_ASSIGNABLE_FROM, METHOD_TO_LIST,
-			METHOD_FILTER, METHOD_GET_ATTRIBUTE_TABLE = null;
+			METHOD_FILTER, METHOD_GET_ATTRIBUTE_TABLE, METHOD_TEST_AND_RUN = null;
 
 	@BeforeSuite
 	void beforeSuite() throws NoSuchMethodException, ClassNotFoundException {
@@ -105,6 +105,8 @@ class MainServletTest {
 		(METHOD_FILTER = clz.getDeclaredMethod("filter", Stream.class, Predicate.class)).setAccessible(true);
 		//
 		(METHOD_GET_ATTRIBUTE_TABLE = clz.getDeclaredMethod("getAttributeTable", Iterable.class)).setAccessible(true);
+		//
+		(METHOD_TEST_AND_RUN = clz.getDeclaredMethod("testAndRun", Boolean.TYPE, Runnable.class)).setAccessible(true);
 		//
 		CLASS_INT_MAP = Class.forName("jakarta.servlet.http.MainServlet$IntMap");
 		//
@@ -833,6 +835,16 @@ class MainServletTest {
 	void testGetAttributeTable() throws IllegalAccessException, InvocationTargetException {
 		//
 		Assert.assertNull(invoke(METHOD_GET_ATTRIBUTE_TABLE, null, Collections.singleton(null)));
+		//
+	}
+
+	@Test
+	void testTestAndRun() throws IllegalAccessException, InvocationTargetException {
+		//
+		Assert.assertNull(invoke(METHOD_TEST_AND_RUN, null, Boolean.TRUE, null));
+		//
+		Assert.assertNull(invoke(METHOD_TEST_AND_RUN, null, Boolean.TRUE,
+				Reflection.newProxy(Runnable.class, ObjectUtils.getIfNull(ih, IH::new))));
 		//
 	}
 

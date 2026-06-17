@@ -251,11 +251,13 @@ public class MainServlet extends HttpServlet {
 					//
 					final int size = IterableUtils.size(temp);
 					//
-					if (size > 1) {
+					testAndRun(size > 1, () -> {
 						//
 						throw new IllegalStateException();
 						//
-					} else if (size == 1) {
+					});
+					//
+					if (size == 1) {
 						//
 						put(m, "LocaleID", IterableUtils.get(temp, 0));
 						//
@@ -311,6 +313,12 @@ public class MainServlet extends HttpServlet {
 			//
 		write(request, response, jna);
 		//
+	}
+
+	private static void testAndRun(final boolean condition, final Runnable runnable) {
+		if (condition && runnable != null) {
+			runnable.run();
+		}
 	}
 
 	private static <K, V> void put(final Map<K, V> instance, final K key, final V value) {
